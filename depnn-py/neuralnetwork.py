@@ -54,13 +54,15 @@ class Network:
 
         dataset = Dataset(deps_dir, nn_batch_size)
 
-        cat_embeddings = Embeddings(dataset.cat_lexicon)
-        slot_embeddings = Embeddings(dataset.slot_lexicon)
-        dist_embeddings = Embeddings(dataset.dist_lexicon)
-        pos_embeddings = Embeddings(dataset.pos_lexicon)
+        cat_embeddings = Embeddings(dataset.cat_lexicon, train=True)
+        slot_embeddings = Embeddings(dataset.slot_lexicon, train=True)
+        dist_embeddings = Embeddings(dataset.dist_lexicon, train=True)
+        pos_embeddings = Embeddings(dataset.pos_lexicon, train=True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
         optimizer = tf.train.AdamOptimizer(learning_rate=nn_learning_rate).minimize(cost)
+
+        # TODO AdaGrad
 
         init = tf.initialize_all_variables()
         saver = tf.train.Saver()
@@ -107,10 +109,10 @@ class Network:
 
         dataset = Dataset(deps_dir)
 
-        cat_embeddings = Embeddings(model_dir + "/cat.emb")
-        slot_embeddings = Embeddings(model_dir + "/slot.emb")
-        dist_embeddings = Embeddings(model_dir + "/dist.emb")
-        pos_embeddings = Embeddings(model_dir + "/pos.emb")
+        cat_embeddings = Embeddings(model_dir + "/cat.emb", train=False)
+        slot_embeddings = Embeddings(model_dir + "/slot.emb", train=False)
+        dist_embeddings = Embeddings(model_dir + "/dist.emb", train=False)
+        pos_embeddings = Embeddings(model_dir + "/pos.emb", train=False)
 
         saver = tf.train.Saver()
 
