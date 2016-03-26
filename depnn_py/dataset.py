@@ -89,7 +89,7 @@ class Dataset:
         batch_xs = map((lambda dep: self.network.make_vector(dep[:-1])), deps_in_batch)
         batch_ys = map(self._make_labels, deps_in_batch)
 
-        return (batch_xs, batch_ys)
+        return (batch_xs, batch_ys, deps_in_batch)
 
     def _make_labels(self, dep):
         if float(dep[-1]) == 0.0:

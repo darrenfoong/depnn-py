@@ -117,17 +117,35 @@ class Network:
                     if not next_batch:
                         break
 
-                    batch_xs, batch_ys = next_batch
+                    batch_xs, batch_ys, deps_in_batch = next_batch
 
                     print "Training batch " + str(epoch) + "/" + str(curr_batch)
+
                     sess.run(optimizer, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
+
+                    print "Network updated"
+
+                    grads_wrt_input = sess.run(tf.gradients(cost, self.x), feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})[0]
+
+                    for i in range(len(deps_in_batch)):
+                        dep = deps_in_batch[i]
+                        grad_wrt_input = grads_wrt_input[i]
+                        self.cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size, nn_learning_rate)
+                        self.slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size, nn_learning_rate)
+                        self.dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size, nn_learning_rate)
+                        self.pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size, nn_learning_rate)
+
+                    print "Embeddings updated"
 
                     # TODO how to track num_batch across epochs?
                     avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})/curr_batch
 
                     print "Cost: " + str(avg_cost)
-
-                    # TODO get errors and update embeddings
 
                     curr_batch += 1
 
@@ -168,7 +186,7 @@ class Network:
         with tf.Session() as sess:
             saver.restore(sess, model_path)
 
-            batch_xs, batch_ys = dataset.next()
+            batch_xs, batch_ys, _ = dataset.next()
 
             correct_prediction = tf.equal(tf.argmax(self.network,1), tf.argmax(self.y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
