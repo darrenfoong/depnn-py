@@ -45,19 +45,47 @@ class Network:
 }
         self.network = multilayer_perceptron(self, self.weights, self.biases)
 
+    def make_vector(dep):
+        head = dep[0]
+        category = dep[1]
+        slot = dep[2]
+        dependent = dep[3]
+        distance = dep[4]
+        head_pos = dep[5]
+        dependent_pos = dep[6]
+        head_left_pos = dep[7]
+        head_right_pos = dep[8]
+        dependent_left_pos = dep[9]
+        dependent_right_pos = dep[10]
+
+        head_vector = word_vectors.get(head)
+        dependent_vector = word_vectors.get(dependent)
+
+        category_vector = cat_embeddings.get(category)
+        slot_vector = slot_embeddings.get(slot)
+        distance_vector = dist_embeddings.get(distance)
+        head_pos_vector = pos_embeddings.get(head_pos)
+        dependent_pos_vector = pos_embeddings.get(dependent_pos)
+        head_left_pos_vector = pos_embeddings.get(head_left_pos)
+        head_right_pos_vector = pos_embeddings.get(head_right_pos)
+        dependent_left_pos_vector = pos_embeddings.get(dependent_left_pos)
+        dependent_right_pos_vector = pos_embeddings.get(dependent_right_pos)
+
+        return np.hstack(category_vector, slot_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector)
+
     def multilayer_perceptron(self, _X, _weights, _biases):
         hidden_layer = tf.nn.relu(tf.add(tf.matmul(_X, _weights["h"], _biases["b"]))
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
-        word_vectors = WordVectors(prev_model)
+        self.word_vectors = WordVectors(prev_model)
 
         dataset = Dataset(deps_dir, nn_batch_size)
 
-        cat_embeddings = Embeddings(dataset.cat_lexicon, train=True)
-        slot_embeddings = Embeddings(dataset.slot_lexicon, train=True)
-        dist_embeddings = Embeddings(dataset.dist_lexicon, train=True)
-        pos_embeddings = Embeddings(dataset.pos_lexicon, train=True)
+        self.cat_embeddings = Embeddings(dataset.cat_lexicon, train=True)
+        self.slot_embeddings = Embeddings(dataset.slot_lexicon, train=True)
+        self.dist_embeddings = Embeddings(dataset.dist_lexicon, train=True)
+        self.pos_embeddings = Embeddings(dataset.pos_lexicon, train=True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
         optimizer = tf.train.AdamOptimizer(learning_rate=nn_learning_rate).minimize(cost)
@@ -72,10 +100,14 @@ class Network:
 
             for epoch in range(nn_epochs):
                 avg_cost = 0
-                num_batch = dataset.num_batch()
+                num_batch = 0
 
-                for i in range(num_batch):
-                    batch_xs, batch_ys = dataset.next_batch()
+                while next_batch:
+                    next_batch = dataset.next()
+                    if not next_batch:
+                        break
+
+                    batch_xs, batch_ys = next_batch
 
                     print "Training batch " + str(epoch) + "/" + str(i)
                     sess.run(optimizer, feed_dict={x: batch_xs, y: batch_ys})
@@ -87,12 +119,13 @@ class Network:
                     # TODO get errors and update embeddings
 
                 print "Serializing network"
-                # TODO need to create folder!
-                saver.save(sess, model_dir + "/epoch " + str(i) + "/model.out")
-                cat_embeddings.serialize(model_dir + "/epoch " + str(i) + "/cat.emb")
-                slot_embeddings.serialize(model_dir + "/epoch " + str(i) + "/slot.emb")
-                dist_embeddings.serialize(model_dir + "/epoch " + str(i) + "/dist.emb")
-                pos_embeddings.serialize(model_dir + "/epoch " + str(i) + "/pos.emb")
+                if not os.path.exists(model_dir + "/epoch" + str(i)):
+                    os.makedirs(model_dir + "/epoch" + str(i))
+                saver.save(sess, model_dir + "/epoch" + str(i) + "/model.out")
+                cat_embeddings.serialize(model_dir + "/epoch" + str(i) + "/cat.emb")
+                slot_embeddings.serialize(model_dir + "/epoch" + str(i) + "/slot.emb")
+                dist_embeddings.serialize(model_dir + "/epoch" + str(i) + "/dist.emb")
+                pos_embeddings.serialize(model_dir + "/epoch" + str(i) + "/pos.emb")
 
                 dataset.reset()
 
@@ -105,14 +138,14 @@ class Network:
             print "Network training complete"
 
     def test(self, deps_dir):
-        word_vectors = WordVectors(model_dir + "word2vec.txt")
+        self.word_vectors = WordVectors(model_dir + "word2vec.txt")
 
         dataset = Dataset(deps_dir)
 
-        cat_embeddings = Embeddings(model_dir + "/cat.emb", train=False)
-        slot_embeddings = Embeddings(model_dir + "/slot.emb", train=False)
-        dist_embeddings = Embeddings(model_dir + "/dist.emb", train=False)
-        pos_embeddings = Embeddings(model_dir + "/pos.emb", train=False)
+        self.cat_embeddings = Embeddings(model_dir + "/cat.emb", train=False)
+        self.slot_embeddings = Embeddings(model_dir + "/slot.emb", train=False)
+        self.dist_embeddings = Embeddings(model_dir + "/dist.emb", train=False)
+        self.pos_embeddings = Embeddings(model_dir + "/pos.emb", train=False)
 
         saver = tf.train.Saver()
 

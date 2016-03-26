@@ -47,5 +47,6 @@ class Embeddings:
     def serialize(path):
         with open(path, "w") as embeddings_file:
             for entry, index in self_.index:
-                # TODO fix nparray serialization
-                embeddings_file.write(entry + " " + self._vectors[index])
+                vector = self._vectors[index]
+                output = " ".join(map((lambda x: str(x)), vector))
+                embeddings_file.write(entry + " " + output)
