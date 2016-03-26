@@ -1,4 +1,7 @@
+data
+output
 *.pyc
+*.tar.gz
 Makefile
 test
 train
