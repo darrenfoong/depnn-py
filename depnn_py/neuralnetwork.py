@@ -26,6 +26,8 @@ n_properties = 11
 n_input = n_properties * w2v_layer_size
 n_classes = 2
 
+num_cores = 20
+
 # Code
 
 class Network:
@@ -105,7 +107,7 @@ class Network:
         init = tf.initialize_all_variables()
         saver = tf.train.Saver()
 
-        with tf.Session() as sess:
+        with tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=num_cores, intra_op_parallelism_threads=num_cores)) as sess:
             sess.run(init)
 
             for epoch in range(1, nn_epochs+1):
@@ -183,7 +185,7 @@ class Network:
 
         model_path = self.model_dir + "/model.out"
 
-        with tf.Session() as sess:
+        with tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=num_cores, intra_op_parallelism_threads=num_cores)) as sess:
             saver.restore(sess, model_path)
 
             batch_xs, batch_ys, _ = dataset.next()
