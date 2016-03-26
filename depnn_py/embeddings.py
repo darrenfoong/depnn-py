@@ -22,7 +22,7 @@ class Embeddings:
 
             with open(lexicon, "r") as embeddings_file:
                 for line in iter(embeddings_file):
-                    # TODO possible newline bug here
+                    line = line.replace("\n", "")
                     line_split = line.split(" ")
                     embedding = line_split[1:]
                     self._add(line_split[0], map((lambda s: float(s)), embedding))

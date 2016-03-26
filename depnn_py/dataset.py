@@ -22,7 +22,7 @@ class Dataset:
         for deps_file_path in deps_file_paths:
             with open(deps_dir + "/" + deps_file_path, "r") as deps_file:
                 for line in iter(deps_file):
-                    # remove count
+                    # remove count and also the newline, conveniently
                     line_split = line.split(" ")[:-1]
                     value = float(line_split[-1])
 
