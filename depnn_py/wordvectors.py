@@ -2,14 +2,15 @@ import numpy as np
 import itertools
 
 class WordVectors:
-    def __init__(self, path, unk_string):
+    def __init__(self, path, w2v_layer_size, unk_string):
         self._index = dict()
+        self._w2v_layer_size = w2v_layer_size
         self.unk_string = unk_string
 
         with open(path, "r") as embeddings_file:
             num_embeddings = sum(1 for line in embeddings_file)
 
-        self._vectors = np.empty(shape=(num_embeddings, 50))
+        self._vectors = np.empty(shape=(num_embeddings, self._w2v_layer_size))
 
         with open(path, "r") as embeddings_file:
             for line in iter(embeddings_file):

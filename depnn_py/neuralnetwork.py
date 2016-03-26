@@ -12,7 +12,7 @@ from dataset import Dataset
 
 w2v_layer_size = 50
 
-nn_epochs = 30
+nn_epochs = 1
 nn_batch_size = 128
 nn_hidden_layer_size = 200
 nn_learning_rate = 1e-2
@@ -34,10 +34,10 @@ class Network:
         if self.train_bool:
             self.prev_model = path
             print "Using previous word2vec model: " + self.prev_model
-            self.word_vectors = WordVectors(self.prev_model, "UNKNOWN")
+            self.word_vectors = WordVectors(self.prev_model, w2v_layer_size, "UNKNOWN")
         else:
             self.model_dir = path
-            self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", "UNKNOWN")
+            self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", w2v_layer_size, "UNKNOWN")
 
         self.x = tf.placeholder("float", [None, n_input])
         self.y = tf.placeholder("float", [None, n_classes])
@@ -93,10 +93,10 @@ class Network:
 
         dataset = Dataset(self, deps_dir, nn_batch_size)
 
-        self.cat_embeddings = Embeddings(dataset.cat_lexicon, train=True, random_range=nn_embed_random_range)
-        self.slot_embeddings = Embeddings(dataset.slot_lexicon, train=True, random_range=nn_embed_random_range)
-        self.dist_embeddings = Embeddings(dataset.dist_lexicon, train=True, random_range=nn_embed_random_range)
-        self.pos_embeddings = Embeddings(dataset.pos_lexicon, train=True, random_range=nn_embed_random_range)
+        self.cat_embeddings = Embeddings(dataset.cat_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self.slot_embeddings = Embeddings(dataset.slot_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self.dist_embeddings = Embeddings(dataset.dist_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self.pos_embeddings = Embeddings(dataset.pos_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
@@ -174,10 +174,10 @@ class Network:
     def test(self, deps_dir):
         dataset = Dataset(self, deps_dir, 0)
 
-        self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", train=False)
-        self.slot_embeddings = Embeddings(self.model_dir + "/slot.emb", train=False)
-        self.dist_embeddings = Embeddings(self.model_dir + "/dist.emb", train=False)
-        self.pos_embeddings = Embeddings(self.model_dir + "/pos.emb", train=False)
+        self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", False, w2v_layer_size)
+        self.slot_embeddings = Embeddings(self.model_dir + "/slot.emb", False, w2v_layer_size)
+        self.dist_embeddings = Embeddings(self.model_dir + "/dist.emb", False, w2v_layer_size)
+        self.pos_embeddings = Embeddings(self.model_dir + "/pos.emb", False, w2v_layer_size)
 
         saver = tf.train.Saver()
 

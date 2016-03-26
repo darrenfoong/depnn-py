@@ -2,12 +2,13 @@ import numpy as np
 import itertools
 
 class Embeddings:
-    def __init__(self, lexicon, train, random_range=0.01):
+    def __init__(self, lexicon, train, w2v_layer_size, random_range=0.01):
         self._index = dict()
+        self._w2v_layer_size = w2v_layer_size
         self._random_range = float(random_range)
 
         if train:
-            self._vectors = np.empty(shape=(len(lexicon)+1, 50))
+            self._vectors = np.empty(shape=(len(lexicon)+1, self._w2v_layer_size))
 
             self._add("_UNK_", self._random_vector())
 
@@ -17,7 +18,7 @@ class Embeddings:
             with open(lexicon, "r") as embeddings_file:
                 num_embeddings = sum(1 for line in embeddings_file)
 
-            self._vectors = np.empty(shape=(num_embeddings, 50))
+            self._vectors = np.empty(shape=(num_embeddings, self._w2v_layer_size))
 
             with open(lexicon, "r") as embeddings_file:
                 for line in iter(embeddings_file):
@@ -27,7 +28,7 @@ class Embeddings:
                     self._add(line_split[0], map((lambda s: float(s)), embedding))
 
     def _random_vector(self):
-        return (np.random.rand(1, 50) * 2 * self._random_range) - self._random_range
+        return (np.random.rand(1, self._w2v_layer_size) * 2 * self._random_range) - self._random_range
 
     def _add(self, entry, vector):
         current_index = len(self._index)
@@ -42,7 +43,7 @@ class Embeddings:
             return self._vectors[0]
 
     def update(self, entry, vector, offset, learning_rate):
-        sub_vector = vector[offset:(offset+50)]
+        sub_vector = vector[offset:(offset+self._w2v_layer_size)]
 
         if entry in self._index:
             current_vector = self._vectors[self._index[entry]]
