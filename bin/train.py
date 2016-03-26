@@ -5,9 +5,9 @@ from depnn_py.neuralnetwork import Network
 
 # Input
 
-deps_dir = ""
-prev_model = ""
-model_dir = ""
+deps_dir = sys.argv[1]
+model_dir = sys.argv[2]
+prev_model = sys.argv[3]
 
 # Code
 
