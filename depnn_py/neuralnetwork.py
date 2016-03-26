@@ -12,7 +12,7 @@ from dataset import Dataset
 
 w2v_layer_size = 50
 
-nn_epochs = 5
+nn_epochs = 30
 nn_batch_size = 128
 nn_hidden_layer_size = 200
 nn_learning_rate = 1e-2
@@ -41,6 +41,8 @@ class Network:
 
         self.x = tf.placeholder("float", [None, n_input])
         self.y = tf.placeholder("float", [None, n_classes])
+        self.input_keep_prob = tf.placeholder("float")
+        self.hidden_keep_prob = tf.placeholder("float")
 
         self.weights = {
             "h": tf.Variable(tf.random_normal([n_input, nn_hidden_layer_size]), name="w_h"),
@@ -81,7 +83,9 @@ class Network:
         return np.hstack((head_vector, category_vector, slot_vector, dependent_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector))
 
     def multilayer_perceptron(self, _X, _weights, _biases):
-        hidden_layer = tf.nn.relu(tf.add(tf.matmul(_X, _weights["h"]), _biases["b"]))
+        input_layer_drop = tf.nn.dropout(_X, self.input_keep_prob)
+        hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["b"]))
+        hidden_layer_drop = tf.nn.dropout(hidden_layer, self.hidden_keep_prob)
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
@@ -95,9 +99,7 @@ class Network:
         self.pos_embeddings = Embeddings(dataset.pos_lexicon, train=True, random_range=nn_embed_random_range)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
-        optimizer = tf.train.AdamOptimizer(learning_rate=nn_learning_rate).minimize(cost)
-
-        # TODO AdaGrad
+        optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
 
         init = tf.initialize_all_variables()
         saver = tf.train.Saver()
@@ -118,10 +120,10 @@ class Network:
                     batch_xs, batch_ys = next_batch
 
                     print "Training batch " + str(epoch) + "/" + str(curr_batch)
-                    sess.run(optimizer, feed_dict={self.x: batch_xs, self.y: batch_ys})
+                    sess.run(optimizer, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
 
                     # TODO how to track num_batch across epochs?
-                    avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys})/curr_batch
+                    avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})/curr_batch
 
                     print "Cost: " + str(avg_cost)
 
@@ -172,7 +174,7 @@ class Network:
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
             y_p = tf.argmax(self.network, 1)
-            val_accuracy, y_network = sess.run([accuracy, y_p], feed_dict={self.x: batch_xs, self.y: batch_ys})
+            val_accuracy, y_network = sess.run([accuracy, y_p], feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: 1.0, self.hidden_keep_prob: 1.0})
 
             y_true = np.argmax(batch_ys, 1)
 
