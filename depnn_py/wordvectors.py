@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import logging
 
 class WordVectors:
     def __init__(self, path, w2v_layer_size, unk_string):
@@ -19,7 +20,7 @@ class WordVectors:
                 embedding = line_split[1:]
                 self._add(line_split[0], map((lambda s: float(s)), embedding))
 
-        print "Number of words: " + str(num_embeddings)
+        logging.info("Number of words: " + str(num_embeddings))
 
     def _add(self, entry, vector):
         current_index = len(self._index)

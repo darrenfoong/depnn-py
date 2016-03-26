@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import os
 import random
+import logging
 
 class Dataset:
     def __init__(self, network, deps_dir, batch_size):
@@ -53,11 +54,11 @@ class Dataset:
             self._correct_deps_per_batch = int(ratio * batch_size)
             self._incorrect_deps_per_batch = batch_size - self._correct_deps_per_batch
 
-        print "Number of correct deps: " + str(num_correct_deps)
-        print "Number of incorrect deps: " + str(num_incorrect_deps)
-        print "Number of correct deps per batch: " + str(self._correct_deps_per_batch)
-        print "Number of incorrect deps per batch: " + str(self._incorrect_deps_per_batch)
-        print "All deps read"
+        logging.info("Number of correct deps: " + str(num_correct_deps))
+        logging.info("Number of incorrect deps: " + str(num_incorrect_deps))
+        logging.info("Number of correct deps per batch: " + str(self._correct_deps_per_batch))
+        logging.info("Number of incorrect deps per batch: " + str(self._incorrect_deps_per_batch))
+        logging.info("All deps read")
 
         self.reset()
 

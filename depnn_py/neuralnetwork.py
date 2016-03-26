@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import sklearn.metrics
 import os
+import logging
 from wordvectors import WordVectors
 from embeddings import Embeddings
 from dataset import Dataset
@@ -33,7 +34,7 @@ class Network:
 
         if self.train_bool:
             self.prev_model = path
-            print "Using previous word2vec model: " + self.prev_model
+            logging.info("Using previous word2vec model: " + self.prev_model)
             self.word_vectors = WordVectors(self.prev_model, w2v_layer_size, "UNKNOWN")
         else:
             self.model_dir = path
@@ -89,7 +90,7 @@ class Network:
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
-        print "Training network using " + deps_dir
+        logging.info("Training network using " + deps_dir)
 
         dataset = Dataset(self, deps_dir, nn_batch_size)
 
@@ -119,11 +120,11 @@ class Network:
 
                     batch_xs, batch_ys, deps_in_batch = next_batch
 
-                    print "Training batch " + str(epoch) + "/" + str(curr_batch)
+                    logging.info("Training batch " + str(epoch) + "/" + str(curr_batch))
 
                     sess.run(optimizer, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
 
-                    print "Network updated"
+                    logging.info("Network updated")
 
                     grads_wrt_input = sess.run(tf.gradients(cost, self.x), feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})[0]
 
@@ -140,15 +141,15 @@ class Network:
                         self.pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size, nn_learning_rate)
                         self.pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size, nn_learning_rate)
 
-                    print "Embeddings updated"
+                    logging.info("Embeddings updated")
 
                     avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})/curr_batch
 
-                    print "Cost: " + str(avg_cost)
+                    logging.info("Cost: " + str(avg_cost))
 
                     curr_batch += 1
 
-                print "Serializing network"
+                logging.info("Serializing network")
                 model_epoch_dir = model_dir + "/epoch" + str(epoch)
 
                 if not os.path.exists(model_epoch_dir):
@@ -168,7 +169,7 @@ class Network:
             self.dist_embeddings.serialize(model_dir + "/dist.emb")
             self.pos_embeddings.serialize(model_dir + "/pos.emb")
 
-            print "Network training complete"
+            logging.info("Network training complete")
 
     def test(self, deps_dir):
         dataset = Dataset(self, deps_dir, 0)
@@ -195,13 +196,13 @@ class Network:
 
             y_true = np.argmax(batch_ys, 1)
 
-            print "Accuracy:", val_accuracy
+            logging.info("Accuracy: " + str(val_accuracy))
 
             confusion_matrix = sklearn.metrics.confusion_matrix(y_true, y_network)
 
-            print "Examples labeled as 0 classified by model as 0: " + str(confusion_matrix[0][0])
-            print "Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1])
-            print "Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0])
-            print "Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1])
+            logging.info("Examples labeled as 0 classified by model as 0: " + str(confusion_matrix[0][0]))
+            logging.info("Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1]))
+            logging.info("Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0]))
+            logging.info("Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1]))
 
-        print "Network testing complete"
+        logging.info("Network testing complete")

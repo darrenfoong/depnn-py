@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import logging
 
 class Embeddings:
     def __init__(self, lexicon, train, w2v_layer_size, random_range=0.01):
