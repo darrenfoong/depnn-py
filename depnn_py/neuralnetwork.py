@@ -143,9 +143,9 @@ class Network:
 
                     logging.info("Embeddings updated")
 
-                    avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})/curr_batch
+                    curr_cost = sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
 
-                    logging.info("Cost: " + str(avg_cost))
+                    logging.info("Cost: " + str(curr_cost))
 
                     curr_batch += 1
 
