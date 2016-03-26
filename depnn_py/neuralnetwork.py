@@ -30,8 +30,11 @@ class Network:
 
         if self.train_bool:
             self.prev_model = path
+            print "Using previous word2vec model: " + self.prev_model
+            self.word_vectors = WordVectors(self.prev_model, "UNKNOWN")
         else:
             self.model_dir = path
+            self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", "UNKNOWN")
 
         self.x = tf.placeholder("float", [None, n_input])
         self.y = tf.placeholder("float", [None, n_classes])
@@ -59,8 +62,8 @@ class Network:
         dependent_left_pos = dep[9]
         dependent_right_pos = dep[10]
 
-        head_vector = word_vectors.get(head)
-        dependent_vector = word_vectors.get(dependent)
+        head_vector = word_vectors.get(head.lower())
+        dependent_vector = word_vectors.get(dependent.lower())
 
         category_vector = cat_embeddings.get(category)
         slot_vector = slot_embeddings.get(slot)
@@ -79,9 +82,9 @@ class Network:
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
-        self.word_vectors = WordVectors(self.prev_model, "UNKNOWN")
+        print "Training network using " + deps_dir
 
-        dataset = Dataset(deps_dir, nn_batch_size)
+        dataset = Dataset(self, deps_dir, nn_batch_size)
 
         self.cat_embeddings = Embeddings(dataset.cat_lexicon, train=True)
         self.slot_embeddings = Embeddings(dataset.slot_lexicon, train=True)
@@ -140,8 +143,6 @@ class Network:
             print "Network training complete"
 
     def test(self, deps_dir):
-        self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", "UNKNOWN")
-
         dataset = Dataset(deps_dir)
 
         self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", train=False)

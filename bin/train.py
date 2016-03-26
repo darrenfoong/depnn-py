@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 from depnn_py.neuralnetwork import Network
+import sys
 
 # Input
 
@@ -11,5 +12,7 @@ prev_model = sys.argv[3]
 
 # Code
 
+print "Initializing network"
 network = Network(prev_model, train=True)
+print "Network initialized"
 network.train(deps_dir, model_dir)

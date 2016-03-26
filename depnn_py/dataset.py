@@ -12,17 +12,33 @@ class Dataset:
         self._correct_iter = None
         self._incorrect_iter = None
 
-        deps_file_path = next(os.walk(deps_dir))[2]
+        self.cat_lexicon = set()
+        self.slot_lexicon = set()
+        self.dist_lexicon = set()
+        self.pos_lexicon = set()
+
+        deps_file_paths = next(os.walk(deps_dir))[2]
 
         for deps_file_path in deps_file_paths:
-            with open(deps_file_path, "r") as deps_file:
+            with open(deps_dir + "/" + deps_file_path, "r") as deps_file:
                 for line in iter(deps_file):
                     line_split = line.split(" ")
                     value = line_split[-1]
+
+                    cat_lexicon.add(line_split[1])
+                    slot_lexicon.add(line_split[2])
+                    dist_lexicon.add(line_split[4])
+                    pos_lexicon.add(line_split[5])
+                    pos_lexicon.add(line_split[6])
+                    pos_lexicon.add(line_split[7])
+                    pos_lexicon.add(line_split[8])
+                    pos_lexicon.add(line_split[9])
+                    pos_lexicon.add(line_split[10])
+
                     if value >= 0.5:
-                        self._correct_deps.add(line_split)
+                        self._correct_deps.append(line_split)
                     else:
-                        self._incorrect_deps.add(line_split)
+                        self._incorrect_deps.append(line_split)
 
         num_correct_deps = len(self._correct_deps)
         num_incorrect_deps = len(self._incorrect_deps)
@@ -35,6 +51,12 @@ class Dataset:
         else:
             self._correct_deps_per_batch = int(ratio * batch_size)
             self._incorrect_deps_per_batch = batch_size - self._correct_deps_per_batch
+
+        print "Number of correct deps: " + num_correct_deps
+        print "Number of incorrect deps: " + num_incorrect_deps
+        print "Number of correct deps per batch: " + self._correct_deps_per_batch
+        print "Number of incorrect deps per batch: " + self._incorrect_deps_per_batch
+        print "All deps read"
 
         reset()
 
@@ -50,13 +72,13 @@ class Dataset:
 
         for i in range(self._correct_deps_per_batch):
             try:
-                deps_in.batch.add(self._correct_iter.next())
+                deps_in.batch.append(self._correct_iter.next())
             except StopIteration:
                 break
 
         for i in range(self._incorrect_deps_per_batch):
             try:
-                deps_in.batch.add(self._incorrect_iter.next())
+                deps_in.batch.append(self._incorrect_iter.next())
             except StopIteration:
                 break
 

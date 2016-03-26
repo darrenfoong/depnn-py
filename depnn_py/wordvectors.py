@@ -14,8 +14,10 @@ class WordVectors:
         with open(path, "r") as embeddings_file:
             for line in iter(embeddings_file):
                 line_split = line.split(" ")
-                embedding = line_split[1:-1]
-                add(line_split[0], map((lambda s: float(s)), embedding))
+                embedding = line_split[1:]
+                self._add(line_split[0], map((lambda s: float(s)), embedding))
+
+        print "Number of words: " + str(num_embeddings)
 
     def _add(self, entry, vector):
         current_index = len(self._index)
