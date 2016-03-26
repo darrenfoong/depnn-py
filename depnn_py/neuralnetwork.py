@@ -142,7 +142,6 @@ class Network:
 
                     print "Embeddings updated"
 
-                    # TODO how to track num_batch across epochs?
                     avg_cost += sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})/curr_batch
 
                     print "Cost: " + str(avg_cost)
