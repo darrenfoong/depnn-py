@@ -1,9 +1,9 @@
 # adapted from https://github.com/aymericdamien/TensorFlow-Examples/
 
 import tensorflow as tf
-import wordvectors
-import embeddings
-import dataset
+from wordvectors import WordVectors
+from embeddings import Embeddings
+from dataset import Dataset
 
 # Parameters
 
@@ -18,6 +18,7 @@ nn_dropout = 0.5
 nn_embed_random_range = 0.01
 nn_hard_labels = True
 
+n_properties = 11
 n_input = n_properties * w2v_layer_size
 n_classes = 2
 
@@ -25,9 +26,9 @@ n_classes = 2
 
 class Network:
     def __init__(self, path, train):
-        self.train = train
+        self.train_bool = train
 
-        if train:
+        if self.train_bool:
             self.prev_model = path
         else:
             self.model_dir = path
@@ -43,7 +44,7 @@ class Network:
             "b": tf.Variable(tf.random_normal([nn_hidden_layer_size]), name="b_b"),
             "out": tf.Variable(tf.random_normal([n_classes]), name="b_out")
 }
-        self.network = multilayer_perceptron(self, self.weights, self.biases)
+        self.network = self.multilayer_perceptron(self.x, self.weights, self.biases)
 
     def make_vector(dep):
         head = dep[0]
@@ -74,11 +75,11 @@ class Network:
         return np.hstack(category_vector, slot_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector)
 
     def multilayer_perceptron(self, _X, _weights, _biases):
-        hidden_layer = tf.nn.relu(tf.add(tf.matmul(_X, _weights["h"], _biases["b"]))
+        hidden_layer = tf.nn.relu(tf.add(tf.matmul(_X, _weights["h"]), _biases["b"]))
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
-        self.word_vectors = WordVectors(prev_model)
+        self.word_vectors = WordVectors(self.prev_model, "UNKNOWN")
 
         dataset = Dataset(deps_dir, nn_batch_size)
 
@@ -119,13 +120,14 @@ class Network:
                     # TODO get errors and update embeddings
 
                 print "Serializing network"
-                if not os.path.exists(model_dir + "/epoch" + str(i)):
-                    os.makedirs(model_dir + "/epoch" + str(i))
-                saver.save(sess, model_dir + "/epoch" + str(i) + "/model.out")
-                cat_embeddings.serialize(model_dir + "/epoch" + str(i) + "/cat.emb")
-                slot_embeddings.serialize(model_dir + "/epoch" + str(i) + "/slot.emb")
-                dist_embeddings.serialize(model_dir + "/epoch" + str(i) + "/dist.emb")
-                pos_embeddings.serialize(model_dir + "/epoch" + str(i) + "/pos.emb")
+                model_epoch_dir = model_dir + "/epoch" + str(i)
+                if not os.path.exists(model_epoch_dir):
+                    os.makedirs(model_epoch_dir)
+                saver.save(sess, model_epoch_dir + "/model.out")
+                cat_embeddings.serialize(model_epoch_dir + "/cat.emb")
+                slot_embeddings.serialize(model_epoch_dir + "/slot.emb")
+                dist_embeddings.serialize(model_epoch_dir + "/dist.emb")
+                pos_embeddings.serialize(model_epoch_dir + "/pos.emb")
 
                 dataset.reset()
 
@@ -138,14 +140,14 @@ class Network:
             print "Network training complete"
 
     def test(self, deps_dir):
-        self.word_vectors = WordVectors(model_dir + "word2vec.txt")
+        self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", "UNKNOWN")
 
         dataset = Dataset(deps_dir)
 
-        self.cat_embeddings = Embeddings(model_dir + "/cat.emb", train=False)
-        self.slot_embeddings = Embeddings(model_dir + "/slot.emb", train=False)
-        self.dist_embeddings = Embeddings(model_dir + "/dist.emb", train=False)
-        self.pos_embeddings = Embeddings(model_dir + "/pos.emb", train=False)
+        self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", train=False)
+        self.slot_embeddings = Embeddings(self.model_dir + "/slot.emb", train=False)
+        self.dist_embeddings = Embeddings(self.model_dir + "/dist.emb", train=False)
+        self.pos_embeddings = Embeddings(self.model_dir + "/pos.emb", train=False)
 
         saver = tf.train.Saver()
 

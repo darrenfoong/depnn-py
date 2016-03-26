@@ -1,5 +1,7 @@
+#!/usr/bin/python
+
 import tensorflow as tf
-import neuralnetwork
+from depnn_py.neuralnetwork import Network
 
 # Input
 
