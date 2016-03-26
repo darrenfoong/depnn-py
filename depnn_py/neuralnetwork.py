@@ -111,9 +111,7 @@ class Network:
             sess.run(init)
 
             for epoch in range(1, nn_epochs+1):
-                avg_cost = 0
                 curr_batch = 1
-                num_batch = 0
 
                 while True:
                     next_batch = dataset.next()
@@ -132,16 +130,16 @@ class Network:
 
                     for i in range(len(deps_in_batch)):
                         dep = deps_in_batch[i]
-                        grad_wrt_input = grads_wrt_input[i]
-                        self.cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size, nn_learning_rate)
-                        self.slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size, nn_learning_rate)
-                        self.dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size, nn_learning_rate)
-                        self.pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size, nn_learning_rate)
+                        grad_wrt_input = nn_learning_rate * grads_wrt_input[i]
+                        self.cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size)
+                        self.slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size)
+                        self.dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size)
+                        self.pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size)
 
                     logging.info("Embeddings updated")
 

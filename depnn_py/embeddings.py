@@ -43,13 +43,13 @@ class Embeddings:
         else:
             return self._vectors[0]
 
-    def update(self, entry, vector, offset, learning_rate):
+    def update(self, entry, vector, offset):
         sub_vector = vector[offset:(offset+self._w2v_layer_size)]
 
         if entry in self._index:
-            self._vectors[self._index[entry]] -= learning_rate * sub_vector
+            self._vectors[self._index[entry]] -= sub_vector
         else:
-            self._vectors[0] -= learning_rate * sub_vector
+            self._vectors[0] -= sub_vector
 
     def serialize(self, path):
         with open(path, "w") as embeddings_file:
