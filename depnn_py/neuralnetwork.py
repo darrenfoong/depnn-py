@@ -103,6 +103,7 @@ class Network:
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
+        gradients = tf.gradients(cost, self.x)
 
         init = tf.initialize_all_variables()
         saver = tf.train.Saver()
@@ -126,7 +127,7 @@ class Network:
 
                     logging.info("Network updated")
 
-                    grads_wrt_input = sess.run(tf.gradients(cost, self.x), feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})[0]
+                    grads_wrt_input = sess.run(gradients, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})[0]
 
                     for i in range(len(deps_in_batch)):
                         dep = deps_in_batch[i]
