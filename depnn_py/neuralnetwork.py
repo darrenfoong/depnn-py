@@ -113,6 +113,7 @@ class Network:
 
             for epoch in range(1, nn_epochs+1):
                 curr_batch = 1
+                sum_cost = 0
 
                 while True:
                     next_batch = dataset.next()
@@ -147,6 +148,9 @@ class Network:
                     logging.info("Cost: " + str(curr_cost))
 
                     curr_batch += 1
+                    sum_cost += curr_cost
+
+                logging.info("Epoch cost: " + str(sum_cost/float(curr_batch-1)))
 
                 logging.info("Serializing network")
                 model_epoch_dir = model_dir + "/epoch" + str(epoch)
