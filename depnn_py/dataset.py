@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import os
 import random
+import re
 import logging
 
 class Dataset:
@@ -25,6 +26,8 @@ class Dataset:
                 for line in iter(deps_file):
                     # remove count and also the newline, conveniently
                     line_split = line.split(" ")[:-1]
+                    MARKUP_CAT = re.compile(r'\[.*?\]')
+                    line_split[1] = MARKUP_CAT.sub("", line_split[1])
                     value = float(line_split[-1])
 
                     self.cat_lexicon.add(line_split[1])
