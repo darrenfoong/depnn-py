@@ -59,7 +59,7 @@ class Network:
 
         self._biases = {
             "b": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b"),
-            "out": tf.Variable(tf.truncated_normal([n_classes]), name="b_out")
+            "out": tf.Variable(tf.constant(0.0, shape=[n_classes]), name="b_out")
         }
 
         self._network = self._multilayer_perceptron(self._x, self._weights, self._biases)
