@@ -30,30 +30,30 @@ n_classes = 2
 
 class Network:
     def __init__(self, path, train):
-        self.train_bool = train
+        self._train_bool = train
 
-        if self.train_bool:
-            self.prev_model = path
-            logging.info("Using previous word2vec model: " + self.prev_model)
-            self.word_vectors = WordVectors(self.prev_model, w2v_layer_size, "UNKNOWN")
+        if self._train_bool:
+            self._prev_model = path
+            logging.info("Using previous word2vec model: " + self._prev_model)
+            self._word_vectors = WordVectors(self._prev_model, w2v_layer_size, "UNKNOWN")
         else:
-            self.model_dir = path
-            self.word_vectors = WordVectors(self.model_dir + "/word2vec.txt", w2v_layer_size, "UNKNOWN")
+            self._model_dir = path
+            self._word_vectors = WordVectors(self._model_dir + "/word2vec.txt", w2v_layer_size, "UNKNOWN")
 
-        self.x = tf.placeholder("float", [None, n_input])
-        self.y = tf.placeholder("float", [None, n_classes])
-        self.input_keep_prob = tf.placeholder("float")
-        self.hidden_keep_prob = tf.placeholder("float")
+        self._x = tf.placeholder("float", [None, n_input])
+        self._y = tf.placeholder("float", [None, n_classes])
+        self._input_keep_prob = tf.placeholder("float")
+        self._hidden_keep_prob = tf.placeholder("float")
 
-        self.weights = {
+        self._weights = {
             "h": tf.Variable(tf.random_normal([n_input, nn_hidden_layer_size]), name="w_h"),
             "out": tf.Variable(tf.random_normal([nn_hidden_layer_size, n_classes]), name="w_out")
 }
-        self.biases = {
+        self._biases = {
             "b": tf.Variable(tf.random_normal([nn_hidden_layer_size]), name="b_b"),
             "out": tf.Variable(tf.random_normal([n_classes]), name="b_out")
 }
-        self.network = self.multilayer_perceptron(self.x, self.weights, self.biases)
+        self._network = self._multilayer_perceptron(self._x, self._weights, self._biases)
 
     def make_vector(self, dep):
         head = dep[0]
@@ -68,25 +68,25 @@ class Network:
         dependent_left_pos = dep[9]
         dependent_right_pos = dep[10]
 
-        head_vector = self.word_vectors.get(head.lower())
-        dependent_vector = self.word_vectors.get(dependent.lower())
+        head_vector = self._word_vectors.get(head.lower())
+        dependent_vector = self._word_vectors.get(dependent.lower())
 
-        category_vector = self.cat_embeddings.get(category)
-        slot_vector = self.slot_embeddings.get(slot)
-        distance_vector = self.dist_embeddings.get(distance)
-        head_pos_vector = self.pos_embeddings.get(head_pos)
-        dependent_pos_vector = self.pos_embeddings.get(dependent_pos)
-        head_left_pos_vector = self.pos_embeddings.get(head_left_pos)
-        head_right_pos_vector = self.pos_embeddings.get(head_right_pos)
-        dependent_left_pos_vector = self.pos_embeddings.get(dependent_left_pos)
-        dependent_right_pos_vector = self.pos_embeddings.get(dependent_right_pos)
+        category_vector = self._cat_embeddings.get(category)
+        slot_vector = self._slot_embeddings.get(slot)
+        distance_vector = self._dist_embeddings.get(distance)
+        head_pos_vector = self._pos_embeddings.get(head_pos)
+        dependent_pos_vector = self._pos_embeddings.get(dependent_pos)
+        head_left_pos_vector = self._pos_embeddings.get(head_left_pos)
+        head_right_pos_vector = self._pos_embeddings.get(head_right_pos)
+        dependent_left_pos_vector = self._pos_embeddings.get(dependent_left_pos)
+        dependent_right_pos_vector = self._pos_embeddings.get(dependent_right_pos)
 
         return np.hstack((head_vector, category_vector, slot_vector, dependent_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector))
 
-    def multilayer_perceptron(self, _X, _weights, _biases):
-        input_layer_drop = tf.nn.dropout(_X, self.input_keep_prob)
+    def _multilayer_perceptron(self, _X, _weights, _biases):
+        input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
         hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["b"]))
-        hidden_layer_drop = tf.nn.dropout(hidden_layer, self.hidden_keep_prob)
+        hidden_layer_drop = tf.nn.dropout(hidden_layer, self._hidden_keep_prob)
         return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
@@ -94,17 +94,17 @@ class Network:
 
         dataset = Dataset(self, deps_dir, nn_batch_size)
 
-        self.cat_embeddings = Embeddings(dataset.cat_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self.slot_embeddings = Embeddings(dataset.slot_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self.dist_embeddings = Embeddings(dataset.dist_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self.pos_embeddings = Embeddings(dataset.pos_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self._cat_embeddings = Embeddings(dataset.cat_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self._slot_embeddings = Embeddings(dataset.slot_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self._dist_embeddings = Embeddings(dataset.dist_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self._pos_embeddings = Embeddings(dataset.pos_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
 
-        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
-        regularizers = tf.nn.l2_loss(self.weights["h"]) + tf.nn.l2_loss(self.weights["out"]) + tf.nn.l2_loss(self.biases["b"]) + tf.nn.l2_loss(self.biases["out"])
+        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
+        regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b"]) + tf.nn.l2_loss(self._biases["out"])
         cost += nn_l2_reg * regularizers
 
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
-        grads_wrt_input_op = tf.gradients(cost, self.x)[0]
+        grads_wrt_input_op = tf.gradients(cost, self._x)[0]
 
         init = tf.initialize_all_variables()
         saver = tf.train.Saver()
@@ -125,26 +125,26 @@ class Network:
 
                     logging.info("Training batch " + str(epoch) + "/" + str(curr_batch))
 
-                    _, grads_wrt_input = sess.run([optimizer, grads_wrt_input_op], feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
+                    _, grads_wrt_input = sess.run([optimizer, grads_wrt_input_op], feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: nn_dropout, self._hidden_keep_prob: nn_dropout})
 
                     logging.info("Network updated")
 
                     for i in range(len(deps_in_batch)):
                         dep = deps_in_batch[i]
                         grad_wrt_input = nn_learning_rate * grads_wrt_input[i]
-                        self.cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size)
-                        self.slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size)
-                        self.dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size)
-                        self.pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size)
+                        self._cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size)
+                        self._slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size)
+                        self._dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size)
+                        self._pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size)
 
                     logging.info("Embeddings updated")
 
-                    curr_cost = sess.run(cost, feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: nn_dropout, self.hidden_keep_prob: nn_dropout})
+                    curr_cost = sess.run(cost, feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: nn_dropout, self._hidden_keep_prob: nn_dropout})
 
                     logging.info("Cost: " + str(curr_cost))
 
@@ -160,43 +160,43 @@ class Network:
                     os.makedirs(model_epoch_dir)
 
                 saver.save(sess, model_epoch_dir + "/model.out")
-                self.cat_embeddings.serialize(model_epoch_dir + "/cat.emb")
-                self.slot_embeddings.serialize(model_epoch_dir + "/slot.emb")
-                self.dist_embeddings.serialize(model_epoch_dir + "/dist.emb")
-                self.pos_embeddings.serialize(model_epoch_dir + "/pos.emb")
+                self._cat_embeddings.serialize(model_epoch_dir + "/cat.emb")
+                self._slot_embeddings.serialize(model_epoch_dir + "/slot.emb")
+                self._dist_embeddings.serialize(model_epoch_dir + "/dist.emb")
+                self._pos_embeddings.serialize(model_epoch_dir + "/pos.emb")
 
                 dataset.reset()
 
             saver.save(sess, model_dir + "/model.out")
-            self.cat_embeddings.serialize(model_dir + "/cat.emb")
-            self.slot_embeddings.serialize(model_dir + "/slot.emb")
-            self.dist_embeddings.serialize(model_dir + "/dist.emb")
-            self.pos_embeddings.serialize(model_dir + "/pos.emb")
+            self._cat_embeddings.serialize(model_dir + "/cat.emb")
+            self._slot_embeddings.serialize(model_dir + "/slot.emb")
+            self._dist_embeddings.serialize(model_dir + "/dist.emb")
+            self._pos_embeddings.serialize(model_dir + "/pos.emb")
 
             logging.info("Network training complete")
 
     def test(self, deps_dir, log_file):
         dataset = Dataset(self, deps_dir, 0)
 
-        self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", False, w2v_layer_size)
-        self.slot_embeddings = Embeddings(self.model_dir + "/slot.emb", False, w2v_layer_size)
-        self.dist_embeddings = Embeddings(self.model_dir + "/dist.emb", False, w2v_layer_size)
-        self.pos_embeddings = Embeddings(self.model_dir + "/pos.emb", False, w2v_layer_size)
+        self._cat_embeddings = Embeddings(self._model_dir + "/cat.emb", False, w2v_layer_size)
+        self._slot_embeddings = Embeddings(self._model_dir + "/slot.emb", False, w2v_layer_size)
+        self._dist_embeddings = Embeddings(self._model_dir + "/dist.emb", False, w2v_layer_size)
+        self._pos_embeddings = Embeddings(self._model_dir + "/pos.emb", False, w2v_layer_size)
 
         saver = tf.train.Saver()
 
-        model_path = self.model_dir + "/model.out"
+        model_path = self._model_dir + "/model.out"
 
         with tf.Session() as sess:
             saver.restore(sess, model_path)
 
             batch_xs, batch_ys, deps_in_batch = dataset.next()
 
-            correct_prediction = tf.equal(tf.argmax(self.network,1), tf.argmax(self.y,1))
+            correct_prediction = tf.equal(tf.argmax(self._network,1), tf.argmax(self._y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-            y_p = tf.argmax(self.network, 1)
-            val_accuracy, y_network = sess.run([accuracy, y_p], feed_dict={self.x: batch_xs, self.y: batch_ys, self.input_keep_prob: 1.0, self.hidden_keep_prob: 1.0})
+            y_p = tf.argmax(self._network, 1)
+            val_accuracy, y_network = sess.run([accuracy, y_p], feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: 1.0, self._hidden_keep_prob: 1.0})
 
             y_true = np.argmax(batch_ys, 1)
 
