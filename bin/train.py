@@ -14,7 +14,7 @@ log_file = sys.argv[4]
 
 # Code
 
-logging.basicConfig(filename=log_file, level=logging.INFO, format="%(message)s")
+logging.basicConfig(filename=log_file, filemode="w", level=logging.INFO, format="%(message)s")
 
 logging.info("Initializing network")
 network = Network(prev_model, train=True)

@@ -15,7 +15,7 @@ model_path = model_dir + "/model"
 
 # Code
 
-logging.basicConfig(filename=log_file, level=logging.INFO, format="%(message)s")
+logging.basicConfig(filename=log_file, filemode="w", level=logging.INFO, format="%(message)s")
 
 logging.info("Initializing network")
 network = Network(model_dir, train=False)
