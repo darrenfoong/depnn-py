@@ -3,6 +3,7 @@
 import numpy as np
 import tensorflow as tf
 import sklearn.metrics
+import math
 import os
 import logging
 from wordvectors import WordVectors
@@ -45,12 +46,18 @@ class Network:
         self._input_keep_prob = tf.placeholder("float")
         self._hidden_keep_prob = tf.placeholder("float")
 
+        # ReLU
+        w_h_stddev = math.sqrt(2 / n_input)
+
+        # Xavier
+        w_out_stddev = math.sqrt(3 / (nn_hidden_layer_size + n_classes))
+
         self._weights = {
-            "h": tf.Variable(tf.random_normal([n_input, nn_hidden_layer_size]), name="w_h"),
-            "out": tf.Variable(tf.random_normal([nn_hidden_layer_size, n_classes]), name="w_out")
+            "h": tf.Variable(tf.truncated_normal([n_input, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h"),
+            "out": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, n_classes], stddev=w_out_stddev), name="w_out")
 }
         self._biases = {
-            "b": tf.Variable(tf.random_normal([nn_hidden_layer_size]), name="b_b"),
+            "b": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b"),
             "out": tf.Variable(tf.random_normal([n_classes]), name="b_out")
 }
         self._network = self._multilayer_perceptron(self._x, self._weights, self._biases)
