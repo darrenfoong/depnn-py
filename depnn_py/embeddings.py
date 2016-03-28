@@ -6,12 +6,14 @@ class Embeddings:
     def __init__(self, lexicon, train, w2v_layer_size, random_range=0.01):
         self._index = dict()
         self._w2v_layer_size = w2v_layer_size
+        self._unk = 0
+        self._unk_string = "_UNK_"
         self._random_range = float(random_range)
 
         if train:
             self._vectors = np.empty(shape=(len(lexicon)+1, self._w2v_layer_size))
 
-            self._add("_UNK_", self._random_vector())
+            self._add(self._unk_string, self._random_vector())
 
             for entry in lexicon:
                 self._add(entry, self._random_vector())
@@ -41,7 +43,7 @@ class Embeddings:
         if entry in self._index:
             return self._vectors[self._index[entry]]
         else:
-            return self._vectors[0]
+            return self._vectors[self._unk]
 
     def update(self, entry, vector, offset):
         sub_vector = vector[offset:(offset+self._w2v_layer_size)]
@@ -49,7 +51,7 @@ class Embeddings:
         if entry in self._index:
             self._vectors[self._index[entry]] -= sub_vector
         else:
-            self._vectors[0] -= sub_vector
+            self._vectors[self._unk] -= sub_vector
 
     def serialize(self, path):
         with open(path, "w") as embeddings_file:
