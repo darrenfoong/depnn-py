@@ -7,8 +7,8 @@ import logging
 
 class Dataset:
     def __init__(self, network, deps_dir, batch_size):
-        self.network = network
-        self.batch_size = batch_size
+        self._network = network
+        self._batch_size = batch_size
         self._correct_deps = list()
         self._incorrect_deps = list()
         self._correct_iter = None
@@ -50,12 +50,12 @@ class Dataset:
         num_total_deps = num_correct_deps + num_incorrect_deps
         ratio = num_correct_deps / float(num_total_deps)
 
-        if batch_size == 0:
+        if self._batch_size == 0:
             self._correct_deps_per_batch = num_correct_deps
             self._incorrect_deps_per_batch = num_incorrect_deps
         else:
-            self._correct_deps_per_batch = int(ratio * batch_size)
-            self._incorrect_deps_per_batch = batch_size - self._correct_deps_per_batch
+            self._correct_deps_per_batch = int(ratio * self._batch_size)
+            self._incorrect_deps_per_batch = self._batch_size - self._correct_deps_per_batch
 
         logging.info("Number of correct deps: " + str(num_correct_deps))
         logging.info("Number of incorrect deps: " + str(num_incorrect_deps))
@@ -90,7 +90,7 @@ class Dataset:
         if not deps_in_batch:
             return None
 
-        batch_xs = map((lambda dep: self.network.make_vector(dep[:-1])), deps_in_batch)
+        batch_xs = map((lambda dep: self._network.make_vector(dep[:-1])), deps_in_batch)
         batch_ys = map(self._make_labels, deps_in_batch)
 
         return (batch_xs, batch_ys, deps_in_batch)
