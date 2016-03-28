@@ -113,6 +113,8 @@ class Network:
             sess.run(init)
 
             for epoch in range(1, nn_epochs+1):
+                logging.info("Training epoch " + str(epoch))
+
                 curr_batch = 1
                 sum_cost = 0
 
@@ -166,8 +168,10 @@ class Network:
 
             logging.info("Network training complete")
 
-    def test(self, deps_dir, log_file):
-        dataset = Dataset(self, deps_dir, 0)
+    def test(self, test_dir, log_file):
+        logging.info("Testing network using " + test_dir)
+
+        dataset = Dataset(self, test_dir, 0)
 
         self._cat_embeddings = Embeddings(self._model_dir + "/cat.emb", False, w2v_layer_size)
         self._slot_embeddings = Embeddings(self._model_dir + "/slot.emb", False, w2v_layer_size)
@@ -182,6 +186,8 @@ class Network:
             saver.restore(sess, model_path)
 
             batch_xs, batch_ys, deps_in_batch = dataset.next()
+
+            logging.info("Number of test examples: " + str(len(deps_in_batch)))
 
             correct_prediction = tf.equal(tf.argmax(self._network,1), tf.argmax(self._y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
