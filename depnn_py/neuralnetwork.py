@@ -177,7 +177,7 @@ class Network:
 
             logging.info("Network training complete")
 
-    def test(self, deps_dir):
+    def test(self, deps_dir, log_file):
         dataset = Dataset(self, deps_dir, 0)
 
         self.cat_embeddings = Embeddings(self.model_dir + "/cat.emb", False, w2v_layer_size)
@@ -192,7 +192,7 @@ class Network:
         with tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=num_cores, intra_op_parallelism_threads=num_cores)) as sess:
             saver.restore(sess, model_path)
 
-            batch_xs, batch_ys, _ = dataset.next()
+            batch_xs, batch_ys, deps_in_batch = dataset.next()
 
             correct_prediction = tf.equal(tf.argmax(self.network,1), tf.argmax(self.y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
@@ -210,5 +210,18 @@ class Network:
             logging.info("Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1]))
             logging.info("Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0]))
             logging.info("Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1]))
+
+        with open(log_file+".classified1", "w") as out_correct, \
+             open(log_file+".classified0", "w") as out_incorrect:
+
+            logging.info("Writing to files")
+
+            for i in range(len(deps_in_batch)):
+                prediction = y_network[i]
+
+                if prediction >= 0.5:
+                    out_correct.write(" ".join(deps_in_batch[i]) + "\n")
+                else:
+                    out_incorrect.write(" ".join(deps_in_batch[i]) + "\n")
 
         logging.info("Network testing complete")
