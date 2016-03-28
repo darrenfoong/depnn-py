@@ -96,7 +96,7 @@ class Network:
         input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
         hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["b"]))
         hidden_layer_drop = tf.nn.dropout(hidden_layer, self._hidden_keep_prob)
-        return tf.matmul(hidden_layer, _weights["out"]) + _biases["out"]
+        return tf.matmul(hidden_layer_drop, _weights["out"]) + _biases["out"]
 
     def train(self, deps_dir, model_dir):
         logging.info("Training network using " + deps_dir)
