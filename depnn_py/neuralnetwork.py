@@ -102,6 +102,9 @@ class Network:
         self.pos_embeddings = Embeddings(dataset.pos_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.network, self.y))
+        regularizers = tf.nn.l2_loss(self.weights["h"]) + tf.nn.l2_loss(self.weights["out"]) + tf.nn.l2_loss(self.biases["b"]) + tf.nn.l2_loss(self.biases["out"])
+        cost += nn_l2_reg * regularizers
+
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
         grads_wrt_input_op = tf.gradients(cost, self.x)[0]
 
