@@ -153,25 +153,16 @@ class Network:
 
                 logging.info("Epoch cost: " + str(sum_cost/float(curr_batch-1)))
 
-                logging.info("Serializing network")
                 model_epoch_dir = model_dir + "/epoch" + str(epoch)
 
                 if not os.path.exists(model_epoch_dir):
                     os.makedirs(model_epoch_dir)
 
-                saver.save(sess, model_epoch_dir + "/model.out")
-                self._cat_embeddings.serialize(model_epoch_dir + "/cat.emb")
-                self._slot_embeddings.serialize(model_epoch_dir + "/slot.emb")
-                self._dist_embeddings.serialize(model_epoch_dir + "/dist.emb")
-                self._pos_embeddings.serialize(model_epoch_dir + "/pos.emb")
+                self._serialize(saver, sess, model_epoch_dir)
 
                 dataset.reset()
 
-            saver.save(sess, model_dir + "/model.out")
-            self._cat_embeddings.serialize(model_dir + "/cat.emb")
-            self._slot_embeddings.serialize(model_dir + "/slot.emb")
-            self._dist_embeddings.serialize(model_dir + "/dist.emb")
-            self._pos_embeddings.serialize(model_dir + "/pos.emb")
+            self._serialize(saver, sess, model_dir)
 
             logging.info("Network training complete")
 
@@ -223,3 +214,12 @@ class Network:
                     out_incorrect.write(" ".join(deps_in_batch[i]) + "\n")
 
         logging.info("Network testing complete")
+
+    def _serialize(self, saver, sess, model_dir):
+        logging.info("Serializing network")
+        saver.save(sess, model_dir + "/model.out")
+        logging.info("Serializing embeddings")
+        self._cat_embeddings.serialize(model_dir + "/cat.emb")
+        self._slot_embeddings.serialize(model_dir + "/slot.emb")
+        self._dist_embeddings.serialize(model_dir + "/dist.emb")
+        self._pos_embeddings.serialize(model_dir + "/pos.emb")
