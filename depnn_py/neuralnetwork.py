@@ -116,7 +116,7 @@ class Network:
         grads_wrt_input_op = tf.gradients(cost, self._x)[0]
 
         init = tf.initialize_all_variables()
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=0)
 
         with tf.Session() as sess:
             sess.run(init)
