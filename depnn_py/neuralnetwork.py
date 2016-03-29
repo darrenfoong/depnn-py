@@ -200,20 +200,16 @@ class Network:
 
             correct_prediction = tf.equal(tf.argmax(self._network,1), tf.argmax(self._y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-
             y_p = tf.argmax(self._network, 1)
-            val_accuracy, y_network = sess.run([accuracy, y_p], feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: 1.0, self._hidden_keep_prob: 1.0})
+            y_p_raw = tf.split(1, 2, self._network)[1]
+
+            val_accuracy, y_network, y_network_raw = sess.run([accuracy, y_p, y_p_raw], feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: 1.0, self._hidden_keep_prob: 1.0})
 
             y_true = np.argmax(batch_ys, 1)
 
             logging.info("Accuracy: " + str(val_accuracy))
 
-            confusion_matrix = sklearn.metrics.confusion_matrix(y_true, y_network)
-
-            logging.info("Examples labeled as 0 classified by model as 0: " + str(confusion_matrix[0][0]))
-            logging.info("Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1]))
-            logging.info("Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0]))
-            logging.info("Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1]))
+            self._evaluate_threshold(y_true, y_network_raw)
 
         with open(log_file+".classified1", "w") as out_correct, \
              open(log_file+".classified0", "w") as out_incorrect:
@@ -229,6 +225,41 @@ class Network:
                     out_incorrect.write(" ".join(deps_in_batch[i]) + "\n")
 
         logging.info("Network testing complete")
+
+    def _evaluate_threshold(self, y_true, y_network_raw):
+        for j in range(5, 10):
+            pos_threshold = j * 0.1
+            neg_threshold = (10 - j) * 0.1
+
+            sub_true = list()
+            sub_network = list()
+
+            for i in range(len(y_true)):
+                # inverse logit
+                prediction = math.exp(y_network_raw[i]) / (math.exp(y_network_raw[i]) + 1)
+
+                if prediction >= pos_threshold:
+                    sub_true.append(y_true[i])
+                    sub_network.append(1)
+
+                if prediction <= neg_threshold:
+                    sub_true.append(y_true[i])
+                    sub_network.append(0)
+
+            logging.info("Evaluation threshold: " + str(pos_threshold) + ", " + str(neg_threshold))
+
+            if not sub_true:
+                logging.info("Filtered list of results is empty")
+                logging.info("")
+                continue
+
+            confusion_matrix = sklearn.metrics.confusion_matrix(sub_true, sub_network)
+
+            logging.info("Examples labeled as 0 classified by model as 0: " + str(confusion_matrix[0][0]))
+            logging.info("Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1]))
+            logging.info("Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0]))
+            logging.info("Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1]))
+            logging.info("")
 
     def _serialize(self, saver, sess, model_dir):
         logging.info("Serializing network")
