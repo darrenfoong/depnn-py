@@ -248,17 +248,23 @@ class Network:
 
             logging.info("Evaluation threshold: " + str(pos_threshold) + ", " + str(neg_threshold))
 
-            if not sub_true:
-                logging.info("Filtered list of results is empty")
-                logging.info("")
-                continue
+            sub_true.append(0)
+            sub_network.append(0)
+            sub_true.append(0)
+            sub_network.append(1)
+            sub_true.append(1)
+            sub_network.append(0)
+            sub_true.append(1)
+            sub_network.append(1)
 
             confusion_matrix = sklearn.metrics.confusion_matrix(sub_true, sub_network)
+            confusion_matrix -= 1
 
             logging.info("Examples labeled as 0 classified by model as 0: " + str(confusion_matrix[0][0]))
             logging.info("Examples labeled as 0 classified by model as 1: " + str(confusion_matrix[0][1]))
             logging.info("Examples labeled as 1 classified by model as 0: " + str(confusion_matrix[1][0]))
             logging.info("Examples labeled as 1 classified by model as 1: " + str(confusion_matrix[1][1]))
+
             logging.info("")
 
     def _serialize(self, saver, sess, model_dir):
