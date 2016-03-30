@@ -26,6 +26,9 @@ class Dataset:
                 for line in iter(deps_file):
                     record = self._helper.make_record(line, self.cat_lexicon, self.slot_lexicon, self.dist_lexicon, self.pos_lexicon)
 
+                    if not record:
+                        continue
+
                     if record.value >= 0.5:
                         self._correct_deps.append(record)
                     else:
