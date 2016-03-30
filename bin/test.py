@@ -17,7 +17,10 @@ model_path = model_dir + "/model"
 
 logging.basicConfig(filename=log_file, filemode="w", level=logging.INFO, format="%(message)s")
 
-logging.info("Initializing network")
-network = Network(model_dir, train=False)
-logging.info("Network initialized")
-network.test(test_dir, log_file)
+try:
+    logging.info("Initializing network")
+    network = Network(model_dir, train=False)
+    logging.info("Network initialized")
+    network.test(test_dir, log_file)
+except Exception as e:
+    logging.exception("Exception on main handler")
