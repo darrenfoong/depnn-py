@@ -241,8 +241,7 @@ class Network:
                 if prediction >= pos_threshold:
                     sub_true.append(y_true[i])
                     sub_network.append(1)
-
-                if prediction <= neg_threshold:
+                elif prediction <= neg_threshold:
                     sub_true.append(y_true[i])
                     sub_network.append(0)
 
