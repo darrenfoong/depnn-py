@@ -2,13 +2,13 @@ import numpy as np
 import itertools
 import os
 import random
-import re
 import logging
 
 class Dataset:
     def __init__(self, network, deps_dir, batch_size):
         self._network = network
         self._batch_size = batch_size
+        self._helper = network._helper
         self._correct_deps = list()
         self._incorrect_deps = list()
         self._correct_iter = None
@@ -24,26 +24,12 @@ class Dataset:
         for deps_file_path in deps_file_paths:
             with open(deps_dir + "/" + deps_file_path, "r") as deps_file:
                 for line in iter(deps_file):
-                    # remove count and also the newline, conveniently
-                    line_split = line.split(" ")[:-1]
-                    MARKUP_CAT = re.compile(r'\[.*?\]')
-                    line_split[1] = MARKUP_CAT.sub("", line_split[1])
-                    value = float(line_split[-1])
+                    record = self._helper.make_record(line, self.cat_lexicon, self.slot_lexicon, self.dist_lexicon, self.pos_lexicon)
 
-                    self.cat_lexicon.add(line_split[1])
-                    self.slot_lexicon.add(line_split[2])
-                    self.dist_lexicon.add(line_split[4])
-                    self.pos_lexicon.add(line_split[5])
-                    self.pos_lexicon.add(line_split[6])
-                    self.pos_lexicon.add(line_split[7])
-                    self.pos_lexicon.add(line_split[8])
-                    self.pos_lexicon.add(line_split[9])
-                    self.pos_lexicon.add(line_split[10])
-
-                    if value >= 0.5:
-                        self._correct_deps.append(line_split)
+                    if record.value >= 0.5:
+                        self._correct_deps.append(record)
                     else:
-                        self._incorrect_deps.append(line_split)
+                        self._incorrect_deps.append(record)
 
         num_correct_deps = len(self._correct_deps)
         num_incorrect_deps = len(self._incorrect_deps)
@@ -90,13 +76,13 @@ class Dataset:
         if not deps_in_batch:
             return None
 
-        batch_xs = map((lambda dep: self._network.make_vector(dep[:-1])), deps_in_batch)
+        batch_xs = map((lambda dep: dep.make_vector(self._network)), deps_in_batch)
         batch_ys = map(self._make_labels, deps_in_batch)
 
         return (batch_xs, batch_ys, deps_in_batch)
 
     def _make_labels(self, dep):
-        if float(dep[-1]) == 0.0:
+        if float(dep.value) == 0.0:
             return [1, 0]
         else:
             return [0, 1]

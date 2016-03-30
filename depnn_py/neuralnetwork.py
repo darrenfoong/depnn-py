@@ -30,7 +30,8 @@ n_classes = 2
 # Code
 
 class Network:
-    def __init__(self, path, train):
+    def __init__(self, path, train, helper):
+        self._helper = helper
         self._train_bool = train
 
         if self._train_bool:
@@ -63,34 +64,6 @@ class Network:
         }
 
         self._network = self._multilayer_perceptron(self._x, self._weights, self._biases)
-
-    def make_vector(self, dep):
-        head = dep[0]
-        category = dep[1]
-        slot = dep[2]
-        dependent = dep[3]
-        distance = dep[4]
-        head_pos = dep[5]
-        dependent_pos = dep[6]
-        head_left_pos = dep[7]
-        head_right_pos = dep[8]
-        dependent_left_pos = dep[9]
-        dependent_right_pos = dep[10]
-
-        head_vector = self._word_vectors.get(head.lower())
-        dependent_vector = self._word_vectors.get(dependent.lower())
-
-        category_vector = self._cat_embeddings.get(category)
-        slot_vector = self._slot_embeddings.get(slot)
-        distance_vector = self._dist_embeddings.get(distance)
-        head_pos_vector = self._pos_embeddings.get(head_pos)
-        dependent_pos_vector = self._pos_embeddings.get(dependent_pos)
-        head_left_pos_vector = self._pos_embeddings.get(head_left_pos)
-        head_right_pos_vector = self._pos_embeddings.get(head_right_pos)
-        dependent_left_pos_vector = self._pos_embeddings.get(dependent_left_pos)
-        dependent_right_pos_vector = self._pos_embeddings.get(dependent_right_pos)
-
-        return np.hstack((head_vector, category_vector, slot_vector, dependent_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector))
 
     def _multilayer_perceptron(self, _X, _weights, _biases):
         input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
@@ -141,7 +114,7 @@ class Network:
                     logging.info("Network updated")
 
                     for i in range(len(deps_in_batch)):
-                        dep = deps_in_batch[i]
+                        dep = deps_in_batch[i].list
                         grad_wrt_input = nn_learning_rate * grads_wrt_input[i]
                         self._cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size)
                         self._slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size)
@@ -220,9 +193,9 @@ class Network:
                 prediction = y_network[i]
 
                 if prediction >= 0.5:
-                    out_correct.write(" ".join(deps_in_batch[i]) + "\n")
+                    out_correct.write(" ".join(deps_in_batch[i].list) + "\n")
                 else:
-                    out_incorrect.write(" ".join(deps_in_batch[i]) + "\n")
+                    out_incorrect.write(" ".join(deps_in_batch[i].list) + "\n")
 
         logging.info("Network testing complete")
 

@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 from depnn_py.neuralnetwork import Network
+from depnn_py.dependency import Dependency
 import sys
 import logging
 
@@ -19,7 +20,7 @@ logging.basicConfig(filename=log_file, filemode="w", level=logging.INFO, format=
 
 try:
     logging.info("Initializing network")
-    network = Network(model_dir, train=False)
+    network = Network(model_dir, False, Dependency())
     logging.info("Network initialized")
     network.test(test_dir, log_file)
 except Exception as e:
