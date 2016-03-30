@@ -2,9 +2,10 @@ import numpy as np
 import re
 
 class Dependency:
-    def _init_(self):
-        self.list = list()
-        self.value = 0.0
+    def __init__(self):
+        self.n_properties = 11
+        self.list = None
+        self.value = None
 
     def make_record(self, line, cat_lexicon, slot_lexicon, dist_lexicon, pos_lexicon):
         result = Dependency()
@@ -56,3 +57,14 @@ class Dependency:
         dependent_right_pos_vector = network._pos_embeddings.get(dependent_right_pos)
 
         return np.hstack((head_vector, category_vector, slot_vector, dependent_vector, distance_vector, head_pos_vector, dependent_pos_vector, head_left_pos_vector, head_right_pos_vector, dependent_left_pos_vector, dependent_right_pos_vector))
+
+    def update_embeddings(self, grad_wrt_input, w2v_layer_size, cat_embeddings, slot_embeddings, dist_embeddings, pos_embeddings):
+        cat_embeddings.update(self.list[1], grad_wrt_input, 1 * w2v_layer_size)
+        slot_embeddings.update(self.list[2], grad_wrt_input, 2 * w2v_layer_size)
+        dist_embeddings.update(self.list[4], grad_wrt_input, 4 * w2v_layer_size)
+        pos_embeddings.update(self.list[5], grad_wrt_input, 5 * w2v_layer_size)
+        pos_embeddings.update(self.list[6], grad_wrt_input, 6 * w2v_layer_size)
+        pos_embeddings.update(self.list[7], grad_wrt_input, 7 * w2v_layer_size)
+        pos_embeddings.update(self.list[8], grad_wrt_input, 8 * w2v_layer_size)
+        pos_embeddings.update(self.list[9], grad_wrt_input, 9 * w2v_layer_size)
+        pos_embeddings.update(self.list[10], grad_wrt_input, 10 * w2v_layer_size)

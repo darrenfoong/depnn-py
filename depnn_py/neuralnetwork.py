@@ -23,8 +23,8 @@ nn_dropout = 0.5
 nn_embed_random_range = 0.01
 nn_hard_labels = True
 
-n_properties = 11
-n_input = n_properties * w2v_layer_size
+n_properties = None
+n_input = None
 n_classes = 2
 
 # Code
@@ -33,6 +33,9 @@ class Network:
     def __init__(self, path, train, helper):
         self._helper = helper
         self._train_bool = train
+
+        n_properties = self._helper.n_properties
+        n_input = n_properties * w2v_layer_size
 
         if self._train_bool:
             self._prev_model = path
@@ -114,17 +117,9 @@ class Network:
                     logging.info("Network updated")
 
                     for i in range(len(deps_in_batch)):
-                        dep = deps_in_batch[i].list
+                        dep = deps_in_batch[i]
                         grad_wrt_input = nn_learning_rate * grads_wrt_input[i]
-                        self._cat_embeddings.update(dep[1], grad_wrt_input, 1 * w2v_layer_size)
-                        self._slot_embeddings.update(dep[2], grad_wrt_input, 2 * w2v_layer_size)
-                        self._dist_embeddings.update(dep[4], grad_wrt_input, 4 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[5], grad_wrt_input, 5 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[6], grad_wrt_input, 6 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[7], grad_wrt_input, 7 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[8], grad_wrt_input, 8 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[9], grad_wrt_input, 9 * w2v_layer_size)
-                        self._pos_embeddings.update(dep[10], grad_wrt_input, 10 * w2v_layer_size)
+                        dep.update_embeddings(grad_wrt_input, w2v_layer_size, self._cat_embeddings, self._slot_embeddings, self._dist_embeddings, self._pos_embeddings)
 
                     logging.info("Embeddings updated")
 
