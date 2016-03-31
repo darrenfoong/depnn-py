@@ -5,12 +5,12 @@ import random
 import logging
 
 class Dataset:
-    def __init__(self, network, deps_dir, batch_size):
+    def __init__(self, network, records_dir, batch_size):
         self._network = network
         self._batch_size = batch_size
         self._helper = network._helper
-        self._correct_deps = list()
-        self._incorrect_deps = list()
+        self._correct_records = list()
+        self._incorrect_records = list()
         self._correct_iter = None
         self._incorrect_iter = None
 
@@ -19,73 +19,73 @@ class Dataset:
         self.dist_lexicon = set()
         self.pos_lexicon = set()
 
-        deps_file_paths = next(os.walk(deps_dir))[2]
+        records_file_paths = next(os.walk(records_dir))[2]
 
-        for deps_file_path in deps_file_paths:
-            with open(deps_dir + "/" + deps_file_path, "r") as deps_file:
-                for line in iter(deps_file):
+        for records_file_path in records_file_paths:
+            with open(records_dir + "/" + records_file_path, "r") as records_file:
+                for line in iter(records_file):
                     record = self._helper.make_record(line, self.cat_lexicon, self.slot_lexicon, self.dist_lexicon, self.pos_lexicon)
 
                     if not record:
                         continue
 
                     if record.value >= 0.5:
-                        self._correct_deps.append(record)
+                        self._correct_records.append(record)
                     else:
-                        self._incorrect_deps.append(record)
+                        self._incorrect_records.append(record)
 
-        num_correct_deps = len(self._correct_deps)
-        num_incorrect_deps = len(self._incorrect_deps)
-        num_total_deps = num_correct_deps + num_incorrect_deps
-        ratio = num_correct_deps / float(num_total_deps)
+        num_correct_records = len(self._correct_records)
+        num_incorrect_records = len(self._incorrect_records)
+        num_total_records = num_correct_records + num_incorrect_records
+        ratio = num_correct_records / float(num_total_records)
 
         if self._batch_size == 0:
-            self._correct_deps_per_batch = num_correct_deps
-            self._incorrect_deps_per_batch = num_incorrect_deps
+            self._correct_records_per_batch = num_correct_records
+            self._incorrect_records_per_batch = num_incorrect_records
         else:
-            self._correct_deps_per_batch = int(ratio * self._batch_size)
-            self._incorrect_deps_per_batch = self._batch_size - self._correct_deps_per_batch
+            self._correct_records_per_batch = int(ratio * self._batch_size)
+            self._incorrect_records_per_batch = self._batch_size - self._correct_records_per_batch
 
-        logging.info("Number of correct deps: " + str(num_correct_deps))
-        logging.info("Number of incorrect deps: " + str(num_incorrect_deps))
-        logging.info("Number of correct deps per batch: " + str(self._correct_deps_per_batch))
-        logging.info("Number of incorrect deps per batch: " + str(self._incorrect_deps_per_batch))
-        logging.info("All deps read")
+        logging.info("Number of correct records: " + str(num_correct_records))
+        logging.info("Number of incorrect records: " + str(num_incorrect_records))
+        logging.info("Number of correct records per batch: " + str(self._correct_records_per_batch))
+        logging.info("Number of incorrect records per batch: " + str(self._incorrect_records_per_batch))
+        logging.info("All records read")
 
         self.reset()
 
     def reset(self):
-        random.shuffle(self._correct_deps)
-        random.shuffle(self._incorrect_deps)
+        random.shuffle(self._correct_records)
+        random.shuffle(self._incorrect_records)
 
-        self._correct_iter = iter(self._correct_deps)
-        self._incorrect_iter = iter(self._incorrect_deps)
+        self._correct_iter = iter(self._correct_records)
+        self._incorrect_iter = iter(self._incorrect_records)
 
     def next(self):
-        deps_in_batch = list()
+        records_in_batch = list()
 
-        for i in range(self._correct_deps_per_batch):
+        for i in range(self._correct_records_per_batch):
             try:
-                deps_in_batch.append(self._correct_iter.next())
+                records_in_batch.append(self._correct_iter.next())
             except StopIteration:
                 break
 
-        for i in range(self._incorrect_deps_per_batch):
+        for i in range(self._incorrect_records_per_batch):
             try:
-                deps_in_batch.append(self._incorrect_iter.next())
+                records_in_batch.append(self._incorrect_iter.next())
             except StopIteration:
                 break
 
-        if not deps_in_batch:
+        if not records_in_batch:
             return None
 
-        batch_xs = map((lambda dep: dep.make_vector(self._network)), deps_in_batch)
-        batch_ys = map(self._make_labels, deps_in_batch)
+        batch_xs = map((lambda record: record.make_vector(self._network)), records_in_batch)
+        batch_ys = map(self._make_labels, records_in_batch)
 
-        return (batch_xs, batch_ys, deps_in_batch)
+        return (batch_xs, batch_ys, records_in_batch)
 
-    def _make_labels(self, dep):
-        if float(dep.value) == 0.0:
+    def _make_labels(self, record):
+        if float(record.value) == 0.0:
             return [1, 0]
         else:
             return [0, 1]
