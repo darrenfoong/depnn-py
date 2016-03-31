@@ -74,10 +74,10 @@ class Network:
         hidden_layer_drop = tf.nn.dropout(hidden_layer, self._hidden_keep_prob)
         return tf.matmul(hidden_layer_drop, _weights["out"]) + _biases["out"]
 
-    def train(self, deps_dir, model_dir):
-        logging.info("Training network using " + deps_dir)
+    def train(self, train_dir, model_dir):
+        logging.info("Training network using " + train_dir)
 
-        iter = DataSetIterator(self, deps_dir, nn_batch_size)
+        iter = DataSetIterator(self, train_dir, nn_batch_size)
 
         self._cat_embeddings = Embeddings(iter.cat_lexicon, w2v_layer_size, nn_embed_random_range, True)
         self._slot_embeddings = Embeddings(iter.slot_lexicon, w2v_layer_size, nn_embed_random_range, True)
@@ -108,7 +108,7 @@ class Network:
                     if not next_batch:
                         break
 
-                    batch_xs, batch_ys, deps_in_batch = next_batch
+                    batch_xs, batch_ys, records_in_batch = next_batch
 
                     logging.info("Training batch " + str(epoch) + "/" + str(curr_batch))
 
@@ -116,10 +116,10 @@ class Network:
 
                     logging.info("Network updated")
 
-                    for i in range(len(deps_in_batch)):
-                        dep = deps_in_batch[i]
+                    for i in range(len(records_in_batch)):
+                        record = records_in_batch[i]
                         grad_wrt_input = nn_learning_rate * grads_wrt_input[i]
-                        dep.update_embeddings(grad_wrt_input, w2v_layer_size, self._cat_embeddings, self._slot_embeddings, self._dist_embeddings, self._pos_embeddings)
+                        record.update_embeddings(grad_wrt_input, w2v_layer_size, self._cat_embeddings, self._slot_embeddings, self._dist_embeddings, self._pos_embeddings)
 
                     logging.info("Embeddings updated")
 
@@ -162,9 +162,9 @@ class Network:
         with tf.Session() as sess:
             saver.restore(sess, model_path)
 
-            batch_xs, batch_ys, deps_in_batch = iter.next()
+            batch_xs, batch_ys, records_in_batch = iter.next()
 
-            logging.info("Number of test examples: " + str(len(deps_in_batch)))
+            logging.info("Number of test examples: " + str(len(records_in_batch)))
 
             correct_prediction = tf.equal(tf.argmax(self._network,1), tf.argmax(self._y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
@@ -184,13 +184,13 @@ class Network:
 
             logging.info("Writing to files")
 
-            for i in range(len(deps_in_batch)):
+            for i in range(len(records_in_batch)):
                 prediction = y_network[i]
 
                 if prediction >= 0.5:
-                    out_correct.write(" ".join(deps_in_batch[i].list) + "\n")
+                    out_correct.write(" ".join(records_in_batch[i].list) + "\n")
                 else:
-                    out_incorrect.write(" ".join(deps_in_batch[i].list) + "\n")
+                    out_incorrect.write(" ".join(records_in_batch[i].list) + "\n")
 
         logging.info("Network testing complete")
 

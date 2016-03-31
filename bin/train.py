@@ -9,7 +9,7 @@ import logging
 
 # Input
 
-deps_dir = sys.argv[1]
+train_dir = sys.argv[1]
 model_dir = sys.argv[2]
 prev_model = sys.argv[3]
 nn_type = sys.argv[4]
@@ -30,6 +30,6 @@ try:
         raise ValueError("Invalid nnType")
 
     logging.info("Network initialized")
-    network.train(deps_dir, model_dir)
+    network.train(train_dir, model_dir)
 except Exception as e:
     logging.exception("Exception on main handler")
