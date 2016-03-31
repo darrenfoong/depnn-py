@@ -79,10 +79,10 @@ class Network:
 
         dataset = Dataset(self, deps_dir, nn_batch_size)
 
-        self._cat_embeddings = Embeddings(dataset.cat_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self._slot_embeddings = Embeddings(dataset.slot_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self._dist_embeddings = Embeddings(dataset.dist_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
-        self._pos_embeddings = Embeddings(dataset.pos_lexicon, True, w2v_layer_size, random_range=nn_embed_random_range)
+        self._cat_embeddings = Embeddings(dataset.cat_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._slot_embeddings = Embeddings(dataset.slot_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._dist_embeddings = Embeddings(dataset.dist_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._pos_embeddings = Embeddings(dataset.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
         regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b"]) + tf.nn.l2_loss(self._biases["out"])
@@ -150,10 +150,10 @@ class Network:
 
         dataset = Dataset(self, test_dir, 0)
 
-        self._cat_embeddings = Embeddings(self._model_dir + "/cat.emb", False, w2v_layer_size)
-        self._slot_embeddings = Embeddings(self._model_dir + "/slot.emb", False, w2v_layer_size)
-        self._dist_embeddings = Embeddings(self._model_dir + "/dist.emb", False, w2v_layer_size)
-        self._pos_embeddings = Embeddings(self._model_dir + "/pos.emb", False, w2v_layer_size)
+        self._cat_embeddings = Embeddings(self._model_dir + "/cat.emb", w2v_layer_size, 0, False)
+        self._slot_embeddings = Embeddings(self._model_dir + "/slot.emb", w2v_layer_size, 0, False)
+        self._dist_embeddings = Embeddings(self._model_dir + "/dist.emb", w2v_layer_size, 0, False)
+        self._pos_embeddings = Embeddings(self._model_dir + "/pos.emb", w2v_layer_size, 0, False)
 
         saver = tf.train.Saver()
 

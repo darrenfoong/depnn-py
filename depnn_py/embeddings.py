@@ -3,25 +3,26 @@ import itertools
 import logging
 
 class Embeddings:
-    def __init__(self, lexicon, train, w2v_layer_size, random_range=0.01):
-        self._index = dict()
-        self._w2v_layer_size = w2v_layer_size
+    def __init__(self, lexicon, size_embeddings, random_range, train):
         self._unk = 0
         self._unk_string = "_UNK_"
+
+        self._map = dict()
+        self._size_embeddings = size_embeddings
         self._random_range = float(random_range)
 
         if train:
-            self._vectors = np.empty(shape=(len(lexicon)+1, self._w2v_layer_size))
+            self._embeddings = np.empty(shape=(len(lexicon)+1, self._size_embeddings))
 
-            self._add(self._unk_string, self._random_vector())
+            self._add(self._unk_string, self._random_embedding())
 
-            for entry in lexicon:
-                self._add(entry, self._random_vector())
+            for key in lexicon:
+                self._add(key, self._random_embedding())
         else:
             with open(lexicon, "r") as embeddings_file:
                 num_embeddings = sum(1 for line in embeddings_file)
 
-            self._vectors = np.empty(shape=(num_embeddings, self._w2v_layer_size))
+            self._embeddings = np.empty(shape=(num_embeddings, self._size_embeddings))
 
             with open(lexicon, "r") as embeddings_file:
                 for line in iter(embeddings_file):
@@ -30,32 +31,32 @@ class Embeddings:
                     embedding = line_split[1:]
                     self._add(line_split[0], map((lambda s: float(s)), embedding))
 
-    def _random_vector(self):
-        return (np.random.rand(1, self._w2v_layer_size) * 2 * self._random_range) - self._random_range
-
-    def _add(self, entry, vector):
-        current_index = len(self._index)
-        self._index[entry] = current_index
-        self._vectors[current_index] = vector
-        #self._vectors[current_index] = vector/np.linalg.norm(vector)
-
-    def get(self, entry):
-        if entry in self._index:
-            return self._vectors[self._index[entry]]
-        else:
-            return self._vectors[self._unk]
-
-    def update(self, entry, vector, offset):
-        sub_vector = vector[offset:(offset+self._w2v_layer_size)]
-
-        if entry in self._index:
-            self._vectors[self._index[entry]] -= sub_vector
-        else:
-            self._vectors[self._unk] -= sub_vector
-
     def serialize(self, path):
         with open(path, "w") as embeddings_file:
-            for entry, index in self._index.iteritems():
-                vector = self._vectors[index]
+            for key, index in self._map.iteritems():
+                vector = self._embeddings[index]
                 output = " ".join(map((lambda x: str(x)), vector))
-                embeddings_file.write(entry + " " + output + "\n")
+                embeddings_file.write(key + " " + output + "\n")
+
+    def _random_embedding(self):
+        return (np.random.rand(1, self._size_embeddings) * 2 * self._random_range) - self._random_range
+
+    def get(self, key):
+        if key in self._map:
+            return self._embeddings[self._map[key]]
+        else:
+            return self._embeddings[self._unk]
+
+    def _add(self, key, embedding):
+        current_index = len(self._map)
+        self._map[key] = current_index
+        self._embeddings[current_index] = embedding
+        #self._embeddings[current_index] = embedding/np.linalg.norm(embedding)
+
+    def update(self, key, embedding, offset):
+        sub_embedding = embedding[offset:(offset+self._size_embeddings)]
+
+        if key in self._map:
+            self._embeddings[self._map[key]] -= sub_embedding
+        else:
+            self._embeddings[self._unk] -= sub_embedding
