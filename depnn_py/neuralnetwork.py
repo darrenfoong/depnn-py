@@ -8,7 +8,7 @@ import os
 import logging
 from wordvectors import WordVectors
 from embeddings import Embeddings
-from dataset import Dataset
+from datasetiterator import DataSetIterator
 
 # Parameters
 
@@ -77,12 +77,12 @@ class Network:
     def train(self, deps_dir, model_dir):
         logging.info("Training network using " + deps_dir)
 
-        dataset = Dataset(self, deps_dir, nn_batch_size)
+        iter = DataSetIterator(self, deps_dir, nn_batch_size)
 
-        self._cat_embeddings = Embeddings(dataset.cat_lexicon, w2v_layer_size, nn_embed_random_range, True)
-        self._slot_embeddings = Embeddings(dataset.slot_lexicon, w2v_layer_size, nn_embed_random_range, True)
-        self._dist_embeddings = Embeddings(dataset.dist_lexicon, w2v_layer_size, nn_embed_random_range, True)
-        self._pos_embeddings = Embeddings(dataset.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._cat_embeddings = Embeddings(iter.cat_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._slot_embeddings = Embeddings(iter.slot_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._dist_embeddings = Embeddings(iter.dist_lexicon, w2v_layer_size, nn_embed_random_range, True)
+        self._pos_embeddings = Embeddings(iter.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
         regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b"]) + tf.nn.l2_loss(self._biases["out"])
@@ -104,7 +104,7 @@ class Network:
                 sum_cost = 0
 
                 while True:
-                    next_batch = dataset.next()
+                    next_batch = iter.next()
                     if not next_batch:
                         break
 
@@ -139,7 +139,7 @@ class Network:
 
                 self._serialize(saver, sess, model_epoch_dir)
 
-                dataset.reset()
+                iter.reset()
 
             self._serialize(saver, sess, model_dir)
 
@@ -148,7 +148,7 @@ class Network:
     def test(self, test_dir, log_file):
         logging.info("Testing network using " + test_dir)
 
-        dataset = Dataset(self, test_dir, 0)
+        iter = DataSetIterator(self, test_dir, 0)
 
         self._cat_embeddings = Embeddings(self._model_dir + "/cat.emb", w2v_layer_size, 0, False)
         self._slot_embeddings = Embeddings(self._model_dir + "/slot.emb", w2v_layer_size, 0, False)
@@ -162,7 +162,7 @@ class Network:
         with tf.Session() as sess:
             saver.restore(sess, model_path)
 
-            batch_xs, batch_ys, deps_in_batch = dataset.next()
+            batch_xs, batch_ys, deps_in_batch = iter.next()
 
             logging.info("Number of test examples: " + str(len(deps_in_batch)))
 

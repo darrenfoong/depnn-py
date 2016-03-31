@@ -4,7 +4,7 @@ import os
 import random
 import logging
 
-class Dataset:
+class DataSetIterator:
     def __init__(self, network, records_dir, batch_size):
         self._network = network
         self._batch_size = batch_size
