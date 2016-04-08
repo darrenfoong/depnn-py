@@ -34,8 +34,8 @@ class Embeddings:
     def serialize(self, path):
         with open(path, "w") as embeddings_file:
             for key, index in self._map.iteritems():
-                vector = self._embeddings[index]
-                output = " ".join(map((lambda x: str(x)), vector))
+                embedding = self._embeddings[index]
+                output = " ".join(map((lambda x: str(x)), embedding))
                 embeddings_file.write(key + " " + output + "\n")
 
     def _random_embedding(self):
