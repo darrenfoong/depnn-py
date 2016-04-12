@@ -3,6 +3,7 @@
 import tensorflow as tf
 from depnn_py.neuralnetwork import Network
 from depnn_py.dependency import Dependency
+from depnn_py.longdependency import LongDependency
 from depnn_py.transdependency import TransDependency
 import sys
 import logging
@@ -24,6 +25,8 @@ try:
 
     if nn_type == "dep":
         network = Network(prev_model, True, Dependency())
+    elif nn_type == "longdep":
+        network = Network(prev_model, True, LongDependency())
     elif nn_type == "transdep":
         network = Network(prev_model, True, TransDependency())
     else:
