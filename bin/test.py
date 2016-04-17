@@ -34,6 +34,6 @@ try:
         raise ValueError("Invalid nnType")
 
     logging.info("Network initialized")
-    network.test(test_dir, log_file)
+    network.test(test_dir, log_file, 0.8, 0.1)
 except Exception as e:
     logging.exception("Exception on main handler")

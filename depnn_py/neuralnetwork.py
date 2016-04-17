@@ -148,7 +148,7 @@ class Network:
 
             logging.info("Network training complete")
 
-    def test(self, test_dir, log_file):
+    def test(self, test_dir, log_file, pos_thres, neg_thres):
         logging.info("Testing network using " + test_dir)
 
         iter = DataSetIterator(self, test_dir, 0)
@@ -180,7 +180,7 @@ class Network:
 
             logging.info("Accuracy: " + str(val_accuracy))
 
-            self._evaluate_thresholds(y_true, y_network_raw)
+            self._evaluate_thresholds(y_true, y_network_raw, pos_thres, neg_thres)
 
         with open(log_file+".classified1", "w") as out_correct, \
              open(log_file+".classified0", "w") as out_incorrect:
@@ -197,14 +197,14 @@ class Network:
 
         logging.info("Network testing complete")
 
-    def _evaluate_thresholds(self, y_true, y_network_raw):
+    def _evaluate_thresholds(self, y_true, y_network_raw, pos_thres, neg_thres):
         for j in range(5, 10):
             pos_threshold = j * 0.1
             neg_threshold = (10 - j) * 0.1
 
             self._evaluate_threshold(y_true, y_network_raw, pos_threshold, neg_threshold)
 
-        self._evaluate_threshold(y_true, y_network_raw, 0.8, 0.1)
+        self._evaluate_threshold(y_true, y_network_raw, pos_thres, neg_thres)
 
     def _evaluate_threshold(self, y_true, y_network_raw, pos_threshold, neg_threshold):
         sub_true = list()
