@@ -256,7 +256,7 @@ class Network:
         bb = self._biases["b"].eval().reshape((1,-1), order="F")
         bout = self._biases["out"].eval().reshape((1,-1), order="F")
 
-        h = np.hstack((wh, wout, bb, bout))
+        h = np.hstack((wh, bb, wout, bout))
 
         if sys.byteorder == "little":
             h.byteswap(True)
