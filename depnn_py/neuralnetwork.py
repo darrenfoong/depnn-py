@@ -5,6 +5,9 @@ import tensorflow as tf
 import sklearn.metrics
 import math
 import os
+import struct
+import codecs
+import sys
 import logging
 from wordvectors import WordVectors
 from embeddings import Embeddings
@@ -239,9 +242,42 @@ class Network:
 
         logging.info("")
 
+    def _writeUTF(self, string):
+        utf8 = string.encode("utf-8")
+        length = len(utf8)
+        return struct.pack("!H", length) + struct.pack("!" + str(length) + "s", utf8)
+
     def _serialize(self, saver, sess, model_dir):
         logging.info("Serializing network")
         saver.save(sess, model_dir + "/model.out")
+
+        wh = self._weights["h"].eval().reshape((1,-1), order="F")
+        wout = self._weights["out"].eval().reshape((1,-1), order="F")
+        bb = self._biases["b"].eval().reshape((1,-1), order="F")
+        bout = self._biases["out"].eval().reshape((1,-1), order="F")
+
+        h = np.hstack((wh, wout, bb, bout))
+
+        if sys.byteorder == "little":
+            h.byteswap(True)
+
+        r, c = h.shape
+
+        with open(model_dir + "/coeffs", "wb") as coeffs_file:
+            coeffs_file.write(struct.pack("!i", 2))
+            coeffs_file.write(struct.pack("!i", r))
+            coeffs_file.write(struct.pack("!i", c))
+            coeffs_file.write(struct.pack("!i", 1))
+            coeffs_file.write(struct.pack("!i", 1))
+            coeffs_file.write(self._writeUTF("float"))
+            coeffs_file.write(self._writeUTF("real"))
+            coeffs_file.write(self._writeUTF("HEAP"))
+            coeffs_file.write(struct.pack("!i", c))
+            coeffs_file.write(self._writeUTF("FLOAT"))
+
+        with open(model_dir + "/coeffs", "ab") as coeffs_file:
+            h.tofile(coeffs_file, "")
+
         logging.info("Serializing embeddings")
         self._cat_embeddings.serialize(model_dir + "/cat.emb")
         self._slot_embeddings.serialize(model_dir + "/slot.emb")
