@@ -3,5 +3,6 @@ output
 *.pyc
 *.tar.gz
 Makefile
+export
 test
 train
