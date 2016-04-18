@@ -172,7 +172,7 @@ class Network:
             correct_prediction = tf.equal(tf.argmax(self._network,1), tf.argmax(self._y,1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
             y_p = tf.argmax(self._network, 1)
-            y_p_raw = tf.split(1, 2, self._network)[1]
+            y_p_raw = tf.split(1, 2, tf.nn.softmax(self._network))[1]
 
             val_accuracy, y_network, y_network_raw = sess.run([accuracy, y_p, y_p_raw], feed_dict={self._x: batch_xs, self._y: batch_ys, self._input_keep_prob: 1.0, self._hidden_keep_prob: 1.0})
 
@@ -212,7 +212,7 @@ class Network:
 
         for i in range(len(y_true)):
             # inverse logit
-            prediction = math.exp(y_network_raw[i]) / (math.exp(y_network_raw[i]) + 1)
+            prediction = y_network_raw[i]
 
             if prediction >= pos_threshold:
                 sub_true.append(y_true[i])
