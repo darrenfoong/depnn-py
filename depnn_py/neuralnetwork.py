@@ -199,8 +199,8 @@ class Network:
 
     def _evaluate_thresholds(self, y_true, y_network_raw, pos_thres, neg_thres):
         for j in range(5, 10):
-            pos_threshold = j * 0.1
-            neg_threshold = (10 - j) * 0.1
+            pos_threshold = j / float(10)
+            neg_threshold = (10 - j) / float(10)
 
             self._evaluate_threshold(y_true, y_network_raw, pos_threshold, neg_threshold)
 
