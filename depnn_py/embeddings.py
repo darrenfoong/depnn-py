@@ -53,6 +53,10 @@ class Embeddings:
         self._embeddings[current_index] = embedding
         #self._embeddings[current_index] = embedding/np.linalg.norm(embedding)
 
+        if key == self._unk_string:
+            self._unk = current_index
+            logging.info("Remapping UNK")
+
     def update(self, key, embedding, offset):
         sub_embedding = embedding[offset:(offset+self._size_embeddings)]
 
