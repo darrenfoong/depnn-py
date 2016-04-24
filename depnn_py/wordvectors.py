@@ -23,6 +23,7 @@ class WordVectors:
                 self._add(line_split[0], map((lambda s: float(s)), embedding))
 
     def get(self, key):
+        key = key.lower()
         if key in self._map:
             return self._embeddings[self._map[key]]
         else:

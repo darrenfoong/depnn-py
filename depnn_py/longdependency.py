@@ -43,8 +43,8 @@ class LongDependency:
         dependent_left_pos = self.list[9]
         dependent_right_pos = self.list[10]
 
-        head_vector = network._word_vectors.get(head.lower())
-        dependent_vector = network._word_vectors.get(dependent.lower())
+        head_vector = network._word_vectors.get(head)
+        dependent_vector = network._word_vectors.get(dependent)
 
         category_vector = network._cat_embeddings.get(category)
         slot_vector = network._slot_embeddings.get(slot)

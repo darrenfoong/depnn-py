@@ -40,8 +40,8 @@ class TransDependency:
         head_pos = self.list[3]
         dependent_pos = self.list[4]
 
-        head_vector = network._word_vectors.get(head.lower())
-        dependent_vector = network._word_vectors.get(dependent.lower())
+        head_vector = network._word_vectors.get(head)
+        dependent_vector = network._word_vectors.get(dependent)
 
         distance_vector = network._dist_embeddings.get(distance)
         head_pos_vector = network._pos_embeddings.get(head_pos)
