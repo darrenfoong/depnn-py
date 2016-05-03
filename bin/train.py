@@ -5,6 +5,7 @@ from depnn_py.neuralnetwork import Network
 from depnn_py.dependency import Dependency
 from depnn_py.longdependency import LongDependency
 from depnn_py.transdependency import TransDependency
+from depnn_py.feature import Feature
 import sys
 import logging
 
@@ -29,6 +30,8 @@ try:
         network = Network(prev_model, True, LongDependency())
     elif nn_type == "transdep":
         network = Network(prev_model, True, TransDependency())
+    elif nn_type == "feature":
+        network = Network(prev_model, True, Feature())
     else:
         raise ValueError("Invalid nnType")
 
