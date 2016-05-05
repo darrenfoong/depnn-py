@@ -56,22 +56,22 @@ try:
     logging.info("Computing cat TSNE")
     cat_proj = TSNE().fit_transform(cat_embeddings._embeddings)
     scatter(cat_proj, inverse_map(cat_embeddings))
-    plt.savefig(model_dir + "/cat.png", dpi=120)
+    plt.savefig(model_dir + "/cat.svg")
 
     logging.info("Computing slot TSNE")
     slot_proj = TSNE().fit_transform(slot_embeddings._embeddings)
     scatter(slot_proj, inverse_map(slot_embeddings))
-    plt.savefig(model_dir + "/slot.png", dpi=120)
+    plt.savefig(model_dir + "/slot.svg")
 
     logging.info("Computing dist TSNE")
     dist_proj = TSNE().fit_transform(dist_embeddings._embeddings)
     scatter(dist_proj, inverse_map(dist_embeddings))
-    plt.savefig(model_dir + "/dist.png", dpi=120)
+    plt.savefig(model_dir + "/dist.svg")
 
     logging.info("Computing pos TSNE")
     pos_proj = TSNE().fit_transform(pos_embeddings._embeddings)
     scatter(pos_proj, inverse_map(pos_embeddings))
-    plt.savefig(model_dir + "/pos.png", dpi=120)
+    plt.savefig(model_dir + "/pos.svg")
 
     logging.info("Done")
 except Exception as e:
