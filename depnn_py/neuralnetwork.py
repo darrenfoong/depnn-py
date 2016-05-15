@@ -191,9 +191,9 @@ class Network:
                 prediction = y_network[i]
 
                 if prediction >= 0.5:
-                    out_correct.write(" ".join(records_in_batch[i].list) + " " + str(records_in_batch[i].value) + "\n")
+                    out_correct.write(" ".join(records_in_batch[i].list) + " " + str(int(records_in_batch[i].value)) + "\n")
                 else:
-                    out_incorrect.write(" ".join(records_in_batch[i].list) + " " + str(records_in_batch[i].value) + "\n")
+                    out_incorrect.write(" ".join(records_in_batch[i].list) + " " + str(int(records_in_batch[i].value)) + "\n")
 
         logging.info("Network testing complete")
 
