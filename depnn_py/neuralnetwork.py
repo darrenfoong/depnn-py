@@ -19,7 +19,7 @@ w2v_layer_size = 50
 
 nn_epochs = 1
 nn_batch_size = 128
-nn_hidden_layer_size = 200
+nn_hidden_layer_size = 1024
 nn_learning_rate = 1e-2
 nn_l2_reg = 1e-8
 nn_dropout = 0.5
@@ -60,12 +60,14 @@ class Network:
         w_out_stddev = math.sqrt(3 / (nn_hidden_layer_size + n_classes))
 
         self._weights = {
-            "h": tf.Variable(tf.truncated_normal([n_input, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h"),
+            "h1": tf.Variable(tf.truncated_normal([n_input, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h1"),
+            "h2": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h2"),
             "out": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, n_classes], stddev=w_out_stddev), name="w_out")
         }
 
         self._biases = {
-            "b": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b"),
+            "b1": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b1"),
+            "b2": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b2"),
             "out": tf.Variable(tf.constant(0.0, shape=[n_classes]), name="b_out")
         }
 
@@ -73,9 +75,11 @@ class Network:
 
     def _multilayer_perceptron(self, _X, _weights, _biases):
         input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
-        hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["b"]))
-        hidden_layer_drop = tf.nn.dropout(hidden_layer, self._hidden_keep_prob)
-        return tf.matmul(hidden_layer_drop, _weights["out"]) + _biases["out"]
+        hidden_layer_1 = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h1"]), _biases["b1"]))
+        hidden_layer_1_drop = tf.nn.dropout(hidden_layer_1, self._hidden_keep_prob)
+        hidden_layer_2 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_1_drop, _weights["h2"]), _biases["b2"]))
+        hidden_layer_2_drop = tf.nn.dropout(hidden_layer_2, self._hidden_keep_prob)
+        return tf.matmul(hidden_layer_2_drop, _weights["out"]) + _biases["out"]
 
     def train(self, train_dir, model_dir):
         logging.info("Training network using " + train_dir)
@@ -88,7 +92,7 @@ class Network:
         self._pos_embeddings = Embeddings(iter.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
-        regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b"]) + tf.nn.l2_loss(self._biases["out"])
+        regularizers = tf.nn.l2_loss(self._weights["h1"]) + tf.nn.l2_loss(self._weights["h2"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b1"]) + tf.nn.l2_loss(self._biases["b2"]) + tf.nn.l2_loss(self._biases["out"])
         cost += nn_l2_reg * regularizers
 
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
@@ -250,33 +254,6 @@ class Network:
     def _serialize(self, saver, sess, model_dir):
         logging.info("Serializing network")
         saver.save(sess, model_dir + "/model.out")
-
-        wh = self._weights["h"].eval().reshape((1,-1), order="F")
-        wout = self._weights["out"].eval().reshape((1,-1), order="F")
-        bb = self._biases["b"].eval().reshape((1,-1), order="F")
-        bout = self._biases["out"].eval().reshape((1,-1), order="F")
-
-        h = np.hstack((wh, bb, wout, bout))
-
-        if sys.byteorder == "little":
-            h.byteswap(True)
-
-        r, c = h.shape
-
-        with open(model_dir + "/coeffs", "wb") as coeffs_file:
-            coeffs_file.write(struct.pack("!i", 2))
-            coeffs_file.write(struct.pack("!i", r))
-            coeffs_file.write(struct.pack("!i", c))
-            coeffs_file.write(struct.pack("!i", 1))
-            coeffs_file.write(struct.pack("!i", 1))
-            coeffs_file.write(self._writeUTF("float"))
-            coeffs_file.write(self._writeUTF("real"))
-            coeffs_file.write(self._writeUTF("HEAP"))
-            coeffs_file.write(struct.pack("!i", c))
-            coeffs_file.write(self._writeUTF("FLOAT"))
-
-        with open(model_dir + "/coeffs", "ab") as coeffs_file:
-            h.tofile(coeffs_file, "")
 
         logging.info("Serializing embeddings")
         self._cat_embeddings.serialize(model_dir + "/cat.emb")
