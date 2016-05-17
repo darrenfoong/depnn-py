@@ -62,12 +62,24 @@ class Network:
         self._weights = {
             "h1": tf.Variable(tf.truncated_normal([n_input, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h1"),
             "h2": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h2"),
+            "h3": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h3"),
+            "h4": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h4"),
+            "h5": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h5"),
+            "h6": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h6"),
+            "h7": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h7"),
+            "h8": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, nn_hidden_layer_size], stddev=w_h_stddev), name="w_h8"),
             "out": tf.Variable(tf.truncated_normal([nn_hidden_layer_size, n_classes], stddev=w_out_stddev), name="w_out")
         }
 
         self._biases = {
             "b1": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b1"),
             "b2": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b2"),
+            "b3": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b3"),
+            "b4": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b4"),
+            "b5": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b5"),
+            "b6": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b6"),
+            "b7": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b7"),
+            "b8": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b8"),
             "out": tf.Variable(tf.constant(0.0, shape=[n_classes]), name="b_out")
         }
 
@@ -75,11 +87,32 @@ class Network:
 
     def _multilayer_perceptron(self, _X, _weights, _biases):
         input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
+
         hidden_layer_1 = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h1"]), _biases["b1"]))
         hidden_layer_1_drop = tf.nn.dropout(hidden_layer_1, self._hidden_keep_prob)
+
         hidden_layer_2 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_1_drop, _weights["h2"]), _biases["b2"]))
         hidden_layer_2_drop = tf.nn.dropout(hidden_layer_2, self._hidden_keep_prob)
-        return tf.matmul(hidden_layer_2_drop, _weights["out"]) + _biases["out"]
+
+        hidden_layer_3 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_2_drop, _weights["h3"]), _biases["b3"]))
+        hidden_layer_3_drop = tf.nn.dropout(hidden_layer_3, self._hidden_keep_prob)
+
+        hidden_layer_4 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_3_drop, _weights["h4"]), _biases["b4"]))
+        hidden_layer_4_drop = tf.nn.dropout(hidden_layer_4, self._hidden_keep_prob)
+
+        hidden_layer_5 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_4_drop, _weights["h5"]), _biases["b5"]))
+        hidden_layer_5_drop = tf.nn.dropout(hidden_layer_5, self._hidden_keep_prob)
+
+        hidden_layer_6 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_5_drop, _weights["h6"]), _biases["b6"]))
+        hidden_layer_6_drop = tf.nn.dropout(hidden_layer_6, self._hidden_keep_prob)
+
+        hidden_layer_7 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_6_drop, _weights["h7"]), _biases["b7"]))
+        hidden_layer_7_drop = tf.nn.dropout(hidden_layer_7, self._hidden_keep_prob)
+
+        hidden_layer_8 = tf.nn.relu(tf.add(tf.matmul(hidden_layer_7_drop, _weights["h8"]), _biases["b8"]))
+        hidden_layer_8_drop = tf.nn.dropout(hidden_layer_8, self._hidden_keep_prob)
+
+        return tf.matmul(hidden_layer_8_drop, _weights["out"]) + _biases["out"]
 
     def train(self, train_dir, model_dir):
         logging.info("Training network using " + train_dir)
@@ -92,7 +125,24 @@ class Network:
         self._pos_embeddings = Embeddings(iter.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
-        regularizers = tf.nn.l2_loss(self._weights["h1"]) + tf.nn.l2_loss(self._weights["h2"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b1"]) + tf.nn.l2_loss(self._biases["b2"]) + tf.nn.l2_loss(self._biases["out"])
+        regularizers = (tf.nn.l2_loss(self._weights["h1"])
+                     + tf.nn.l2_loss(self._weights["h2"])
+                     + tf.nn.l2_loss(self._weights["h3"])
+                     + tf.nn.l2_loss(self._weights["h4"])
+                     + tf.nn.l2_loss(self._weights["h5"])
+                     + tf.nn.l2_loss(self._weights["h6"])
+                     + tf.nn.l2_loss(self._weights["h7"])
+                     + tf.nn.l2_loss(self._weights["h8"])
+                     + tf.nn.l2_loss(self._weights["out"])
+                     + tf.nn.l2_loss(self._biases["b1"])
+                     + tf.nn.l2_loss(self._biases["b2"])
+                     + tf.nn.l2_loss(self._biases["b3"])
+                     + tf.nn.l2_loss(self._biases["b4"])
+                     + tf.nn.l2_loss(self._biases["b5"])
+                     + tf.nn.l2_loss(self._biases["b6"])
+                     + tf.nn.l2_loss(self._biases["b7"])
+                     + tf.nn.l2_loss(self._biases["b8"])
+                     + tf.nn.l2_loss(self._biases["out"]))
         cost += nn_l2_reg * regularizers
 
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
