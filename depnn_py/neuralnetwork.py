@@ -65,7 +65,7 @@ class Network:
         }
 
         self._biases = {
-            "b": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_b"),
+            "h": tf.Variable(tf.constant(0.1, shape=[nn_hidden_layer_size]), name="b_h"),
             "out": tf.Variable(tf.constant(0.0, shape=[n_classes]), name="b_out")
         }
 
@@ -73,7 +73,7 @@ class Network:
 
     def _multilayer_perceptron(self, _X, _weights, _biases):
         input_layer_drop = tf.nn.dropout(_X, self._input_keep_prob)
-        hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["b"]))
+        hidden_layer = tf.nn.relu(tf.add(tf.matmul(input_layer_drop, _weights["h"]), _biases["h"]))
         hidden_layer_drop = tf.nn.dropout(hidden_layer, self._hidden_keep_prob)
         return tf.matmul(hidden_layer_drop, _weights["out"]) + _biases["out"]
 
@@ -88,7 +88,7 @@ class Network:
         self._pos_embeddings = Embeddings(iter.pos_lexicon, w2v_layer_size, nn_embed_random_range, True)
 
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self._network, self._y))
-        regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["b"]) + tf.nn.l2_loss(self._biases["out"])
+        regularizers = tf.nn.l2_loss(self._weights["h"]) + tf.nn.l2_loss(self._weights["out"]) + tf.nn.l2_loss(self._biases["h"]) + tf.nn.l2_loss(self._biases["out"])
         cost += nn_l2_reg * regularizers
 
         optimizer = tf.train.AdagradOptimizer(learning_rate=nn_learning_rate).minimize(cost)
@@ -253,10 +253,10 @@ class Network:
 
         wh = self._weights["h"].eval().reshape((1,-1), order="F")
         wout = self._weights["out"].eval().reshape((1,-1), order="F")
-        bb = self._biases["b"].eval().reshape((1,-1), order="F")
+        bh = self._biases["h"].eval().reshape((1,-1), order="F")
         bout = self._biases["out"].eval().reshape((1,-1), order="F")
 
-        h = np.hstack((wh, bb, wout, bout))
+        h = np.hstack((wh, bh, wout, bout))
 
         if sys.byteorder == "little":
             h.byteswap(True)
